@@ -9,8 +9,38 @@ generator client {
   output   = "../src/generated/prisma"
 }
 
+
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
+// ---------------MODELS & RELATIONS---------------
+
+model User {
+  id      Int     @id @default(autoincrement())
+  email   String  @unique
+  tasks   Task[]
+}
+
+model Category {
+  id     Int     @id @default(autoincrement())
+  name   String
+  color  String
+  tasks  Task[]
+}
+
+model Task {
+  id         Int       @id @default(autoincrement())
+  title      String
+  status     String
+  priority   String
+  createdAt  DateTime  @default(now())
+
+  // Relations
+  author     User      @relation(fields: [authorId], references: [id])
+  authorId   Int
+
+  category   Category  @relation(fields: [categoryId], references: [id])
+  categoryId Int
+}
