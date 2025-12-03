@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import UserStatus from "./components/UserStatus";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,6 +28,10 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <header className="flex justify-between items-center p-4 border-b">
+          <h1 className="font-semibold">Family & Friends Organizer</h1>
+          <UserStatus />
+        </header>
         {children}
       </body>
     </html>
