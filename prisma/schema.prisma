@@ -27,12 +27,12 @@ model User {
 }
 
 
-model Category {
-  id     Int     @id @default(autoincrement())
-  name   String
-  color  String
-  tasks  Task[]
-}
+// model Category {
+//   id     Int     @id @default(autoincrement())
+//   name   String
+//   color  String
+//   tasks  Task[]
+// }
 
 model Task {
   id         Int       @id @default(autoincrement())
@@ -41,10 +41,77 @@ model Task {
   priority   String
   createdAt  DateTime  @default(now())
 
-  // Relations
   author     User      @relation(fields: [authorId], references: [id])
   authorId   Int
 
-  category   Category  @relation(fields: [categoryId], references: [id])
+  // category   Category  @relation(fields: [categoryId], references: [id])
   categoryId Int
 }
+
+model TodoList {
+  id        String   @id @default(cuid())
+  title     String
+
+  todos     Todo[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Todo {
+  id        String   @id @default(cuid())
+  title     String
+  done      Boolean  @default(false)
+
+  listId    String
+  list      TodoList @relation(fields: [listId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Activity {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+
+  startsAt    DateTime
+  endsAt      DateTime?
+  allDay      Boolean  @default(false)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Checklist {
+  id        String          @id @default(cuid())
+  title     String
+
+  items     ChecklistItem[]
+
+  createdAt DateTime        @default(now())
+  updatedAt DateTime        @updatedAt
+}
+
+model ChecklistItem {
+  id          String    @id @default(cuid())
+  text        String
+  checked     Boolean   @default(false)
+
+  checklistId String
+  checklist   Checklist @relation(fields: [checklistId], references: [id])
+}
+
+model Note {
+  id        String   @id @default(cuid())
+  title     String
+  content   String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+
+
+
