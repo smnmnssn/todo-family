@@ -70,19 +70,6 @@ model Todo {
   updatedAt DateTime @updatedAt
 }
 
-model Activity {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-
-  startsAt    DateTime
-  endsAt      DateTime?
-  allDay      Boolean  @default(false)
-
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-}
-
 model Checklist {
   id        String          @id @default(cuid())
   title     String
@@ -111,6 +98,22 @@ model Note {
   updatedAt DateTime @updatedAt
 }
 
+model Activity {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+
+  // Datumet aktiviteten ligger på (används för månadsvyn)
+  date        DateTime
+
+  startTime   String?
+  endTime     String?
+
+  allDay      Boolean  @default(false)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
 
 
 
