@@ -33,11 +33,28 @@ export default async function TodosPage() {
         <CreateListDialog />
       </header>
 
-      {lists.length === 0 ? (
-        <div className="mt-8 rounded-xl border bg-muted/40 px-6 py-10 text-center text-sm text-muted-foreground">
-          Du har inga listor ännu. Skapa din första lista för att komma igång.
-        </div>
-      ) : (
+{lists.length === 0 ? (
+  <div className="mt-8 rounded-xl border bg-muted/40 px-6 py-10 text-center">
+    <div className="flex flex-col items-center gap-3">
+      <div className="rounded-full bg-primary/10 p-3">
+        <svg className="size-6 text-primary" 
+             xmlns="http://www.w3.org/2000/svg" 
+             viewBox="0 0 24 24" 
+             fill="none" 
+             stroke="currentColor" 
+             strokeWidth="2">
+          <path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>
+        </svg>
+      </div>
+
+      <p className="text-sm text-muted-foreground">
+        Du har inga listor ännu. Skapa din första lista för att komma igång.
+      </p>
+
+      <CreateListDialog />
+    </div>
+  </div>
+) : (
         <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
           {lists.map((list) => (
             <TodoList key={list.id} list={list} />
