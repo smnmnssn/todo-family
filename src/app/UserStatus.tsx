@@ -1,5 +1,6 @@
-import { getCurrentUser } from '@/lib/get-current-user';
-import { LogoutButton } from './LogoutButton';
+
+import { getCurrentUser } from "@/lib/get-current-user";
+import { LogoutButton } from "./LogoutButton";
 
 export default async function UserStatus() {
   const user = await getCurrentUser();

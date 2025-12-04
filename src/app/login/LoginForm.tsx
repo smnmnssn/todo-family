@@ -13,7 +13,7 @@ export function LoginForm() {
     await signIn('credentials', {
       redirect: true,
       callbackUrl: '/',
-      mode: 'login',        // viktiga parametern!
+      mode: 'login',
       email,
       password,
     });
