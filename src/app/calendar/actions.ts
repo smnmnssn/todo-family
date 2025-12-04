@@ -5,15 +5,14 @@ import { Activity } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
-const CALENDAR_REVALIDATE_PATH = "/calendar"; // ändra till din riktiga route
+const CALENDAR_REVALIDATE_PATH = "/calendar"; 
 
 type ActionResult<T> =
   | { success: true; data: T }
   | { success: false; error: string };
 
-// --- Hjälpare ---
+// --- Helpers ---
 
-// "2025-11-02" -> Date (UTC, datum-del)
 function parseDateOnly(dateStr: string): Date {
   const [yearStr, monthStr, dayStr] = dateStr.split("-");
   const year = Number(yearStr);
@@ -53,7 +52,7 @@ const deleteSchema = z.object({
 
 const monthQuerySchema = z.object({
   year: z.number().int(),
-  month: z.number().int().min(1).max(12), // 1–12
+  month: z.number().int().min(1).max(12),
 });
 
 // --- Typer för returdata ---
@@ -70,7 +69,6 @@ export type ActivityDTO = {
   updatedAt: string;
 };
 
-// Mappar Prisma-objekt till DTO med date som YYYY-MM-DD-string
 function mapActivityToDTO(a: Activity): ActivityDTO {
   const date = new Date(a.date);
   const yyyy = date.getUTCFullYear();
@@ -136,7 +134,6 @@ export async function getActivitiesForMonth(
   }
 }
 
-// (Valfritt men bra för edit-modal)
 export async function getActivityById(
   id: string
 ): Promise<ActionResult<ActivityDTO>> {
