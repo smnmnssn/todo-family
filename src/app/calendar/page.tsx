@@ -12,7 +12,9 @@ type CalendarPageProps = {
   searchParams: Promise<CalendarSearchParams>;
 };
 
-export default async function CalendarPage({ searchParams }: CalendarPageProps) {
+export default async function CalendarPage({
+  searchParams,
+}: CalendarPageProps) {
   const params = await searchParams;
 
   const today = new Date();
@@ -30,16 +32,18 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
       ? Number(monthParam)
       : today.getMonth() + 1;
 
-  const month = Math.min(Math.max(rawMonth, 1), 12); 
+  const month = Math.min(Math.max(rawMonth, 1), 12); // clamp 1–12
 
   const result = await getActivitiesForMonth({ year, month });
 
   if (!result.success) {
     return (
-      <div className="max-w-6xl mx-auto p-6">
-        <p className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-          {result.error}
-        </p>
+      <div className="min-h-[calc(100vh-4rem)] bg-[#c5d7e6] py-8 px-4">
+        <div className="mx-auto max-w-5xl">
+          <p className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+            {result.error}
+          </p>
+        </div>
       </div>
     );
   }
@@ -47,15 +51,17 @@ export default async function CalendarPage({ searchParams }: CalendarPageProps) 
   const activities: ActivityDTO[] = result.data;
 
   return (
-    <div className="max-w-6xl mx-auto p-6 space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Kalender</h1>
-        <p className="text-sm text-muted-foreground">
-          Se familjens aktiviteter månadsvis.
-        </p>
-      </header>
+    <div className="min-h-[calc(100vh-4rem)] bg-[#c5d7e6] py-8 px-4">
+      <div className="mx-auto max-w-5xl space-y-8">
+        <header>
+          <h1 className="text-3xl font-semibold text-[#3b4a5c]">Kalender</h1>
+          <p className="text-sm text-slate-600">
+            Se familjens aktiviteter månadsvis.
+          </p>
+        </header>
 
-      <MonthView year={year} month={month} activities={activities} />
+        <MonthView year={year} month={month} activities={activities} />
+      </div>
     </div>
   );
 }
