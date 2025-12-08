@@ -24,9 +24,8 @@ export function ChecklistCard({ checklist }: ChecklistCardProps) {
   const [error, setError] = React.useState<string | null>(null);
   const [loadingItem, setLoadingItem] = React.useState(false);
   const [loadingDelete, setLoadingDelete] = React.useState(false);
-  const [loadingToggleId, setLoadingToggleId] = React.useState<string | null>(
-    null,
-  );
+  const [loadingToggleId, setLoadingToggleId] =
+    React.useState<string | null>(null);
   const [loadingDeleteItemId, setLoadingDeleteItemId] =
     React.useState<string | null>(null);
 
@@ -113,74 +112,88 @@ export function ChecklistCard({ checklist }: ChecklistCardProps) {
   }
 
   return (
-    <article className="rounded-xl border bg-background/60 px-4 py-3 text-sm shadow-sm">
+    <article className="rounded-2xl border border-white/70 bg-white/80 px-4 py-3 text-sm shadow-[0_12px_30px_rgba(15,23,42,0.16)] backdrop-blur-md">
       <div className="mb-2 flex items-center justify-between gap-2">
-        <h3 className="font-medium">{checklist.title}</h3>
+        <h3 className="text-sm font-semibold text-[#3b4a5c]">
+          {checklist.title}
+        </h3>
         <Button
           type="button"
           variant="outline"
           size="sm"
           onClick={handleDeleteChecklist}
           disabled={loadingDelete}
+          className="h-7 px-2 text-[11px]"
         >
-          {loadingDelete ? "Tar bort..." : "Radera"}
+          {loadingDelete ? "Tar bort..." : "Ta bort lista"}
         </Button>
       </div>
 
       {checklist.items.length === 0 ? (
-        <p className="mb-2 text-xs text-muted-foreground">
-          Inga punkter ännu. Lägg till din första punkt nedan.
-        </p>
-      ) : (
-        <ul className="mb-3 space-y-1 text-xs">
-          {checklist.items.map((item) => (
-            <li
-              key={item.id}
-              className="flex items-center justify-between gap-2"
+  <p className="mb-2 text-xs text-slate-500">
+    Inga punkter ännu. Lägg till din första punkt nedan.
+  </p>
+) : (
+  <ul className="mb-3 space-y-1 text-xs">
+    {checklist.items.map((item) => (
+      <li
+        key={item.id}
+        className="flex items-center justify-between gap-2"
+      >
+        <div className="flex flex-1 items-center gap-2">
+          <Checkbox
+            checked={item.done}
+            onCheckedChange={() => handleToggleItem(item.id)}
+            disabled={loadingToggleId === item.id}
+            className="h-3.5 w-3.5"
+          />
+          <button
+            type="button"
+            onClick={() => handleToggleItem(item.id)}
+            disabled={loadingToggleId === item.id}
+            className="flex-1 text-left"
+          >
+            <span
+              className={
+                item.done
+                  ? "line-through text-slate-400"
+                  : "text-slate-800"
+              }
             >
-              <button
-                type="button"
-                onClick={() => handleToggleItem(item.id)}
-                className="flex flex-1 items-center gap-2 text-left"
-                disabled={loadingToggleId === item.id}
-              >
-                <Checkbox
-                  checked={item.done}
-                  onCheckedChange={() => handleToggleItem(item.id)}
-                  disabled={loadingToggleId === item.id}
-                />
-                <span
-                  className={
-                    item.done
-                      ? "line-through text-muted-foreground"
-                      : "text-foreground"
-                  }
-                >
-                  {item.text}
-                </span>
-              </button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="lg"
-                onClick={() => handleDeleteItem(item.id)}
-                disabled={loadingDeleteItemId === item.id}
-              >
-                ✕
-              </Button>
-            </li>
-          ))}
-        </ul>
-      )}
+              {item.text}
+            </span>
+          </button>
+        </div>
+
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={() => handleDeleteItem(item.id)}
+          disabled={loadingDeleteItemId === item.id}
+          className="h-7 px-2 text-[11px] text-slate-500 hover:text-slate-700"
+        >
+          ✕
+        </Button>
+      </li>
+    ))}
+  </ul>
+)}
+
 
       <form onSubmit={handleAddItem} className="mt-2 flex gap-2">
         <Input
           value={newItemText}
           onChange={(event) => setNewItemText(event.target.value)}
           placeholder="Lägg till punkt..."
-          className="h-8 text-xs"
+          className="h-8 rounded-lg bg-white/80 text-xs"
         />
-        <Button type="submit" size="sm" disabled={loadingItem}>
+        <Button
+          type="submit"
+          size="sm"
+          disabled={loadingItem}
+          className="h-8 px-3 text-xs"
+        >
           {loadingItem ? "Lägger till..." : "Lägg till"}
         </Button>
       </form>

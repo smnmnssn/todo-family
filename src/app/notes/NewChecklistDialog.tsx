@@ -61,22 +61,24 @@ export function NewChecklistDialog() {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button size="sm">
+        <Button size="sm" className="h-8 px-3 text-xs">
           Ny lista
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md rounded-3xl border border-white/70 bg-white/80 px-6 py-6 shadow-[0_18px_45px_rgba(15,23,42,0.18)] backdrop-blur-md">
         <DialogHeader>
-          <DialogTitle>Ny checklista</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-lg font-semibold text-[#3b4a5c]">
+            Ny checklista
+          </DialogTitle>
+          <DialogDescription className="text-xs text-slate-600">
             Skapa en ny lista, till exempel en shoppinglista eller packlista.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">
+            <label className="text-sm font-medium text-[#3b4a5c]">
               Titel
             </label>
             <Input
@@ -84,6 +86,7 @@ export function NewChecklistDialog() {
               onChange={(event) => setTitle(event.target.value)}
               placeholder="Ex. Shoppinglista"
               autoFocus
+              className="bg-white/80"
             />
           </div>
 

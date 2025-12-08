@@ -73,22 +73,24 @@ export function NewNoteDialog() {
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button size="sm">
+        <Button size="sm" className="h-8 px-3 text-xs">
           Ny anteckning
         </Button>
       </DialogTrigger>
 
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-md rounded-3xl border border-white/70 bg-white/80 px-6 py-6 shadow-[0_18px_45px_rgba(15,23,42,0.18)] backdrop-blur-md">
         <DialogHeader>
-          <DialogTitle>Ny anteckning</DialogTitle>
-          <DialogDescription>
+          <DialogTitle className="text-lg font-semibold text-[#3b4a5c]">
+            Ny anteckning
+          </DialogTitle>
+          <DialogDescription className="text-xs text-slate-600">
             Skriv ned något du vill komma ihåg eller spara.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">
+            <label className="text-sm font-medium text-[#3b4a5c]">
               Titel
             </label>
             <Input
@@ -96,11 +98,12 @@ export function NewNoteDialog() {
               onChange={(event) => setTitle(event.target.value)}
               placeholder="Ex. Idéer till helgen"
               autoFocus
+              className="bg-white/80"
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium">
+            <label className="text-sm font-medium text-[#3b4a5c]">
               Innehåll
             </label>
             <Textarea
@@ -108,6 +111,7 @@ export function NewNoteDialog() {
               onChange={(event) => setContent(event.target.value)}
               rows={4}
               placeholder="Skriv din anteckning här..."
+              className="bg-white/80"
             />
           </div>
 
