@@ -35,14 +35,9 @@ const defaultItems: NavItem[] = [
     icon: CheckSquare,
   },
   {
-    label: "Listor",
+    label: "Listor & anteckningar",
     href: "/notes", // checklistor + anteckningar
     icon: ListChecks,
-  },
-  {
-    label: "Anteckningar",
-    href: "/notes", // samma sida, annan label om du vill
-    icon: StickyNote,
   },
 ];
 
@@ -90,7 +85,7 @@ export function AppSidebar({ items = defaultItems }: AppSidebarProps) {
 
             return (
               <Link
-                key={item.href}
+                key={item.label}
                 href={item.href}
                 className={cn(
                   "flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all",
