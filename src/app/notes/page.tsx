@@ -1,10 +1,10 @@
 // app/notes/page.tsx
 import { getChecklists } from "../checklists/actions";
 import { getNotes } from "./actions";
-import { NewChecklistDialog } from "./NewChecklistDialog";
-import { NewNoteDialog } from "./NewNoteDialog";
-import { ChecklistCard } from "./ChecklistCard";
-import { NoteCard } from "./NoteCard";
+import { NewChecklistDialog } from "@/components/notes/NewChecklistDialog";
+import { NewNoteDialog } from "@/components/notes/NewNoteDialog";
+import { ChecklistCard } from "@/components/notes/ChecklistCard";
+import { NoteCard } from "@/components/notes/NoteCard";
 
 export default async function NotesPage() {
   const [checklistsResult, notesResult] = await Promise.all([

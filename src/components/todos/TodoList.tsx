@@ -27,7 +27,7 @@ import {
   deleteTodo,
   deleteTodoList,
   updateTodoList,
-} from "./actions";
+} from "../../app/todos/actions";
 import CreateTodoDialog from "./CreateTodoDialog";
 
 type Todo = {
@@ -77,7 +77,8 @@ export default function TodoList({ list }: TodoListProps) {
             {list.title}
           </CardTitle>
           <p className="text-xs text-muted-foreground">
-            {list.todos.length} {list.todos.length === 1 ? "uppgift" : "uppgifter"}
+            {list.todos.length}{" "}
+            {list.todos.length === 1 ? "uppgift" : "uppgifter"}
           </p>
         </div>
 
@@ -113,7 +114,8 @@ export default function TodoList({ list }: TodoListProps) {
               <DialogHeader>
                 <DialogTitle>Byt namn på lista</DialogTitle>
                 <DialogDescription>
-                  Uppdatera titeln för listan. Detta påverkar inte dina befintliga todos.
+                  Uppdatera titeln för listan. Detta påverkar inte dina
+                  befintliga todos.
                 </DialogDescription>
               </DialogHeader>
               <form onSubmit={handleUpdateTitle} className="space-y-4">
@@ -143,27 +145,29 @@ export default function TodoList({ list }: TodoListProps) {
       </CardHeader>
 
       <CardContent className="flex-1 pt-4">
-  {list.todos.length === 0 ? (
-    <div className="flex flex-col items-center justify-center gap-3 py-6 text-center">
-      <div className="rounded-full bg-muted p-2">
-        <svg className="size-5 text-muted-foreground" 
-             xmlns="http://www.w3.org/2000/svg" 
-             fill="none" 
-             viewBox="0 0 24 24" 
-             stroke="currentColor" 
-             strokeWidth="2">
-          <path d="M9 12h6M12 9v6" />
-          <circle cx="12" cy="12" r="9" />
-        </svg>
-      </div>
+        {list.todos.length === 0 ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-6 text-center">
+            <div className="rounded-full bg-muted p-2">
+              <svg
+                className="size-5 text-muted-foreground"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path d="M9 12h6M12 9v6" />
+                <circle cx="12" cy="12" r="9" />
+              </svg>
+            </div>
 
-      <p className="text-xs text-muted-foreground">
-        Inga uppgifter här ännu.
-      </p>
+            <p className="text-xs text-muted-foreground">
+              Inga uppgifter här ännu.
+            </p>
 
-      <CreateTodoDialog listId={list.id} />
-    </div>
-  ) : (
+            <CreateTodoDialog listId={list.id} />
+          </div>
+        ) : (
           <ul className="space-y-2 text-sm">
             {list.todos.map((todo) => (
               <li

@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import { useRouter, usePathname } from "next/navigation";
-import type { ActivityDTO } from "./actions";
+import type { ActivityDTO } from "../../app/calendar/actions";
 import { CreateActivityDialog } from "./CreateActivityDialog";
 import { EditActivityDialog } from "./EditActivityDialog";
 

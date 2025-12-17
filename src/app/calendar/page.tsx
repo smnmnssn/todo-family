@@ -1,5 +1,5 @@
 // app/calendar/page.tsx
-import MonthView from "./MonthView";
+import MonthView from "../../components/calendar/MonthView";
 import type { ActivityDTO } from "./actions";
 import { getActivitiesForMonth } from "./actions";
 

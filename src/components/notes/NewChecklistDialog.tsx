@@ -2,10 +2,9 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { createNote } from "./actions";
+import { createChecklist } from "../../app/checklists/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
   DialogContent,
@@ -16,12 +15,11 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 
-export function NewNoteDialog() {
+export function NewChecklistDialog() {
   const router = useRouter();
 
   const [open, setOpen] = React.useState(false);
   const [title, setTitle] = React.useState("");
-  const [content, setContent] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
   const [loading, setLoading] = React.useState(false);
 
@@ -29,7 +27,6 @@ export function NewNoteDialog() {
     setOpen(nextOpen);
     if (!nextOpen) {
       setTitle("");
-      setContent("");
       setError(null);
     }
   }
@@ -41,21 +38,13 @@ export function NewNoteDialog() {
     setError(null);
 
     if (!title.trim()) {
-      setError("Anteckningen måste ha en titel.");
-      return;
-    }
-
-    if (!content.trim()) {
-      setError("Anteckningen får inte vara tom.");
+      setError("Listan måste ha en titel.");
       return;
     }
 
     setLoading(true);
 
-    const result = await createNote({
-      title: title.trim(),
-      content: content.trim(),
-    });
+    const result = await createChecklist({ title: title.trim() });
 
     setLoading(false);
 
@@ -66,7 +55,6 @@ export function NewNoteDialog() {
 
     setOpen(false);
     setTitle("");
-    setContent("");
     router.refresh();
   }
 
@@ -74,17 +62,17 @@ export function NewNoteDialog() {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button size="sm" className="h-8 px-3 text-xs">
-          Ny anteckning
+          Ny lista
         </Button>
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-md rounded-3xl border border-white/70 bg-white/80 px-6 py-6 shadow-[0_18px_45px_rgba(15,23,42,0.18)] backdrop-blur-md">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold text-[#3b4a5c]">
-            Ny anteckning
+            Ny checklista
           </DialogTitle>
           <DialogDescription className="text-xs text-slate-600">
-            Skriv ned något du vill komma ihåg eller spara.
+            Skapa en ny lista, till exempel en shoppinglista eller packlista.
           </DialogDescription>
         </DialogHeader>
 
@@ -96,21 +84,8 @@ export function NewNoteDialog() {
             <Input
               value={title}
               onChange={(event) => setTitle(event.target.value)}
-              placeholder="Ex. Idéer till helgen"
+              placeholder="Ex. Shoppinglista"
               autoFocus
-              className="bg-white/80"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-[#3b4a5c]">
-              Innehåll
-            </label>
-            <Textarea
-              value={content}
-              onChange={(event) => setContent(event.target.value)}
-              rows={4}
-              placeholder="Skriv din anteckning här..."
               className="bg-white/80"
             />
           </div>
