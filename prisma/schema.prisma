@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,87 +7,66 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-
-// ---------------MODELS & RELATIONS---------------
-
 model User {
   id           Int      @id @default(autoincrement())
   email        String   @unique
-  passwordHash String
-  name         String?
   createdAt    DateTime @default(now())
-
+  name         String?
+  passwordHash String
   tasks        Task[]
 }
 
-
-// model Category {
-//   id     Int     @id @default(autoincrement())
-//   name   String
-//   color  String
-//   tasks  Task[]
-// }
-
 model Task {
-  id         Int       @id @default(autoincrement())
+  id         Int      @id @default(autoincrement())
   title      String
   status     String
   priority   String
-  createdAt  DateTime  @default(now())
-
-  author     User      @relation(fields: [authorId], references: [id])
+  createdAt  DateTime @default(now())
   authorId   Int
-
-  // category   Category  @relation(fields: [categoryId], references: [id])
   categoryId Int
+  author     User     @relation(fields: [authorId], references: [id])
 }
 
 model TodoList {
   id        String   @id @default(cuid())
   title     String
-
-  todos     Todo[]
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  todos     Todo[]
 }
 
 model Todo {
   id        String   @id @default(cuid())
   title     String
   done      Boolean  @default(false)
-
   listId    String
-  list      TodoList @relation(fields: [listId], references: [id])
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  list      TodoList @relation(fields: [listId], references: [id])
 }
 
 model Checklist {
   id        String          @id @default(cuid())
   title     String
-  items     ChecklistItem[]
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
+  items     ChecklistItem[]
 }
 
 model ChecklistItem {
-  id          String     @id @default(cuid())
+  id          String    @id @default(cuid())
   text        String
-  done        Boolean    @default(false)
-  checklist   Checklist  @relation(fields: [checklistId], references: [id], onDelete: Cascade)
   checklistId String
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
+  createdAt   DateTime  @default(now())
+  done        Boolean   @default(false)
+  updatedAt   DateTime  @updatedAt
+  checklist   Checklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
 }
-
 
 model Note {
   id        String   @id @default(cuid())
   title     String
   content   String
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -102,19 +75,10 @@ model Activity {
   id          String   @id @default(cuid())
   title       String
   description String?
-
-  // Datumet aktiviteten ligger på (används för månadsvyn)
-  date        DateTime
-
-  startTime   String?
-  endTime     String?
-
   allDay      Boolean  @default(false)
-
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  date        DateTime
+  endTime     String?
+  startTime   String?
 }
-
-
-
-
