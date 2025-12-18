@@ -15,7 +15,7 @@ export default async function NotesPage() {
   const hasError = !checklistsResult.success || !notesResult.success;
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[radial-gradient(circle_at_top,_#dbe7f3,_#c5d7e6_45%,_#eef2f7_100%)] px-4 py-10">
+    <div className="min-h-[calc(100vh-4rem)] bg-[radial-gradient(circle_at_top,#dbe7f3,#c5d7e6_45%,#eef2f7_100%)] px-4 py-10">
       <div className="mx-auto flex max-w-6xl flex-col gap-6">
         <header className="mb-2">
           <h1 className="text-2xl font-semibold tracking-tight text-[#3b4a5c]">

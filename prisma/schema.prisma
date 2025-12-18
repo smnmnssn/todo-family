@@ -23,7 +23,6 @@ model Task {
   priority   String
   createdAt  DateTime @default(now())
   authorId   Int
-  categoryId Int
   author     User     @relation(fields: [authorId], references: [id])
 }
 
