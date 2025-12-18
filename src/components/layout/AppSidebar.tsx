@@ -8,7 +8,6 @@ import {
   CheckSquare,
   Home,
   ListChecks,
-  StickyNote,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -30,7 +29,7 @@ const defaultItems: NavItem[] = [
     icon: CalendarDays,
   },
   {
-    label: "Todos",
+    label: "Todo's",
     href: "/todos",
     icon: CheckSquare,
   },
@@ -59,7 +58,7 @@ export function AppSidebar({ items = defaultItems }: AppSidebarProps) {
         "hidden md:flex",
         "h-[calc(100vh-4rem)] w-60 shrink-0", // 4rem = headerhöjd om du har det
         "flex-col justify-between",
-        "rounded-r-[2rem] border-r border-white/70 bg-white/60",
+        "rounded-r-4xl border-r border-white/70 bg-white/60",
         "shadow-[0_18px_45px_rgba(15,23,42,0.18)] backdrop-blur-xl",
         "px-4 py-6"
       )}
