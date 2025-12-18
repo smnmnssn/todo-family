@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createNote } from "../../app/notes/actions";
 import { Button } from "@/components/ui/button";
@@ -23,7 +24,8 @@ export function NewNoteDialog() {
   const [title, setTitle] = React.useState("");
   const [content, setContent] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
-  const [loading, setLoading] = React.useState(false);
+
+  const [isPending, startTransition] = useTransition();
 
   function handleOpenChange(nextOpen: boolean): void {
     setOpen(nextOpen);
@@ -34,9 +36,7 @@ export function NewNoteDialog() {
     }
   }
 
-  async function handleSubmit(
-    event: React.FormEvent<HTMLFormElement>,
-  ): Promise<void> {
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>): void {
     event.preventDefault();
     setError(null);
 
@@ -50,24 +50,22 @@ export function NewNoteDialog() {
       return;
     }
 
-    setLoading(true);
+    startTransition(async () => {
+      const result = await createNote({
+        title: title.trim(),
+        content: content.trim(),
+      });
 
-    const result = await createNote({
-      title: title.trim(),
-      content: content.trim(),
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
+
+      setOpen(false);
+      setTitle("");
+      setContent("");
+      router.refresh();
     });
-
-    setLoading(false);
-
-    if (!result.success) {
-      setError(result.error);
-      return;
-    }
-
-    setOpen(false);
-    setTitle("");
-    setContent("");
-    router.refresh();
   }
 
   return (
@@ -90,9 +88,7 @@ export function NewNoteDialog() {
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-[#3b4a5c]">
-              Titel
-            </label>
+            <label className="text-sm font-medium text-[#3b4a5c]">Titel</label>
             <Input
               value={title}
               onChange={(event) => setTitle(event.target.value)}
@@ -115,22 +111,22 @@ export function NewNoteDialog() {
             />
           </div>
 
-          {error && (
-            <p className="text-xs text-destructive">
-              {error}
-            </p>
-          )}
+          {error && <p className="text-xs text-destructive">{error}</p>}
 
           <DialogFooter className="mt-2 flex gap-2 sm:justify-end">
             <Button
               type="button"
               variant="outline"
               onClick={() => handleOpenChange(false)}
+              disabled={isPending}
             >
               Avbryt
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Skapar..." : "Spara"}
+            <Button
+              type="submit"
+              disabled={isPending || !title.trim() || !content.trim()}
+            >
+              {isPending ? "Skapar..." : "Spara"}
             </Button>
           </DialogFooter>
         </form>

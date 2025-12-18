@@ -53,7 +53,10 @@ interface TodoListProps {
 export default function TodoList({ list }: TodoListProps) {
   const [editOpen, setEditOpen] = React.useState(false);
   const [title, setTitle] = React.useState(list.title);
-  const [isDeleting, setIsDeleting] = React.useState(false);
+  const [isPending, startTransition] = React.useTransition();
+  const [deletingTodoId, setDeletingTodoId] = React.useState<string | null>(
+    null
+  );
 
   async function handleUpdateTitle(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -64,9 +67,9 @@ export default function TodoList({ list }: TodoListProps) {
   }
 
   async function handleDeleteList() {
-    setIsDeleting(true);
-    await deleteTodoList({ id: list.id });
-    setIsDeleting(false);
+    startTransition(async () => {
+      await deleteTodoList({ id: list.id });
+    });
   }
 
   return (
@@ -102,7 +105,7 @@ export default function TodoList({ list }: TodoListProps) {
                 <DropdownMenuItem
                   className="flex items-center gap-2 text-destructive focus:text-destructive"
                   onClick={handleDeleteList}
-                  disabled={isDeleting}
+                  disabled={isPending}
                 >
                   <Trash2 className="size-3.5" />
                   Ta bort lista
@@ -196,8 +199,11 @@ export default function TodoList({ list }: TodoListProps) {
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  disabled={deletingTodoId === todo.id}
                   onClick={async () => {
+                    setDeletingTodoId(todo.id);
                     await deleteTodo({ id: todo.id });
+                    setDeletingTodoId(null);
                   }}
                 >
                   <Trash2 className="size-4" />

@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { ActivityDTO } from "../../app/calendar/actions";
 import { updateActivity, deleteActivity } from "../../app/calendar/actions";
@@ -28,17 +29,16 @@ export function EditActivityDialog({ activity }: EditActivityDialogProps) {
   const [open, setOpen] = React.useState(false);
 
   const [title, setTitle] = React.useState(activity.title);
-  const [description, setDescription] = React.useState(
-    activity.description ?? "",
-  );
+  const [description, setDescription] = React.useState(activity.description ?? "");
   const [date, setDate] = React.useState(activity.date);
   const [startTime, setStartTime] = React.useState(activity.startTime ?? "");
   const [endTime, setEndTime] = React.useState(activity.endTime ?? "");
   const [allDay, setAllDay] = React.useState(activity.allDay);
 
   const [error, setError] = React.useState<string | null>(null);
-  const [saving, setSaving] = React.useState(false);
-  const [deleting, setDeleting] = React.useState(false);
+
+  const [isSaving, startSave] = useTransition();
+  const [isDeleting, startDelete] = useTransition();
 
   function resetForm(): void {
     setTitle(activity.title);
@@ -52,14 +52,10 @@ export function EditActivityDialog({ activity }: EditActivityDialogProps) {
 
   function handleOpenChange(nextOpen: boolean): void {
     setOpen(nextOpen);
-    if (!nextOpen) {
-      resetForm();
-    }
+    if (!nextOpen) resetForm();
   }
 
-  async function handleSubmit(
-    event: React.FormEvent<HTMLFormElement>,
-  ): Promise<void> {
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>): void {
     event.preventDefault();
     setError(null);
 
@@ -73,49 +69,46 @@ export function EditActivityDialog({ activity }: EditActivityDialogProps) {
       return;
     }
 
-    setSaving(true);
+    startSave(async () => {
+      const result = await updateActivity({
+        id: activity.id,
+        title: title.trim(),
+        description: description.trim() || undefined,
+        date,
+        startTime: allDay ? undefined : startTime || undefined,
+        endTime: allDay ? undefined : endTime || undefined,
+        allDay,
+      });
 
-    const result = await updateActivity({
-      id: activity.id,
-      title: title.trim(),
-      description: description.trim() || undefined,
-      date,
-      startTime: allDay ? undefined : startTime || undefined,
-      endTime: allDay ? undefined : endTime || undefined,
-      allDay,
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
+
+      setOpen(false);
+      router.refresh();
     });
-
-    setSaving(false);
-
-    if (!result.success) {
-      setError(result.error);
-      return;
-    }
-
-    setOpen(false);
-    router.refresh();
   }
 
-  async function handleDelete(): Promise<void> {
+  function handleDelete(): void {
     const confirmed = window.confirm(
-      "Är du säker på att du vill ta bort den här aktiviteten?",
+      "Är du säker på att du vill ta bort den här aktiviteten?"
     );
     if (!confirmed) return;
 
-    setDeleting(true);
     setError(null);
 
-    const result = await deleteActivity({ id: activity.id });
+    startDelete(async () => {
+      const result = await deleteActivity({ id: activity.id });
 
-    setDeleting(false);
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
 
-    if (!result.success) {
-      setError(result.error);
-      return;
-    }
-
-    setOpen(false);
-    router.refresh();
+      setOpen(false);
+      router.refresh();
+    });
   }
 
   return (
@@ -126,9 +119,7 @@ export function EditActivityDialog({ activity }: EditActivityDialogProps) {
         </Button>
       </DialogTrigger>
 
-      <DialogContent
-        className="sm:max-w-lg rounded-3xl border border-white/70 bg-white/80 px-6 py-6 shadow-[0_18px_45px_rgba(15,23,42,0.18)] backdrop-blur-md"
-      >
+      <DialogContent className="sm:max-w-lg rounded-3xl border border-white/70 bg-white/80 px-6 py-6 shadow-[0_18px_45px_rgba(15,23,42,0.18)] backdrop-blur-md">
         <DialogHeader className="space-y-1.5">
           <DialogTitle className="text-lg font-semibold text-[#3b4a5c]">
             Redigera aktivitet
@@ -140,14 +131,13 @@ export function EditActivityDialog({ activity }: EditActivityDialogProps) {
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-[#3b4a5c]">
-              Titel
-            </label>
+            <label className="text-sm font-medium text-[#3b4a5c]">Titel</label>
             <Input
               value={title}
               onChange={(event) => setTitle(event.target.value)}
               autoFocus
               className="bg-white/70"
+              disabled={isSaving || isDeleting}
             />
           </div>
 
@@ -161,32 +151,30 @@ export function EditActivityDialog({ activity }: EditActivityDialogProps) {
               onChange={(event) => setDescription(event.target.value)}
               rows={3}
               className="bg-white/70"
+              disabled={isSaving || isDeleting}
             />
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-[#3b4a5c]">
-              Datum
-            </label>
+            <label className="text-sm font-medium text-[#3b4a5c]">Datum</label>
             <Input
               type="date"
               value={date}
               onChange={(event) => setDate(event.target.value)}
               className="bg-white/70"
+              disabled={isSaving || isDeleting}
             />
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <Checkbox
-                id="edit-all-day"
+                id={`edit-all-day-${activity.id}`}
                 checked={allDay}
                 onCheckedChange={(checked) => setAllDay(Boolean(checked))}
+                disabled={isSaving || isDeleting}
               />
-              <label
-                htmlFor="edit-all-day"
-                className="text-sm text-slate-700"
-              >
+              <label htmlFor={`edit-all-day-${activity.id}`} className="text-sm text-slate-700">
                 Heldagsaktivitet
               </label>
             </div>
@@ -199,7 +187,7 @@ export function EditActivityDialog({ activity }: EditActivityDialogProps) {
                 <Input
                   type="time"
                   value={startTime}
-                  disabled={allDay}
+                  disabled={allDay || isSaving || isDeleting}
                   onChange={(event) => setStartTime(event.target.value)}
                   className="bg-white/70"
                 />
@@ -211,7 +199,7 @@ export function EditActivityDialog({ activity }: EditActivityDialogProps) {
                 <Input
                   type="time"
                   value={endTime}
-                  disabled={allDay}
+                  disabled={allDay || isSaving || isDeleting}
                   onChange={(event) => setEndTime(event.target.value)}
                   className="bg-white/70"
                 />
@@ -219,20 +207,16 @@ export function EditActivityDialog({ activity }: EditActivityDialogProps) {
             </div>
           </div>
 
-          {error && (
-            <p className="text-xs text-destructive">
-              {error}
-            </p>
-          )}
+          {error && <p className="text-xs text-destructive">{error}</p>}
 
           <DialogFooter className="mt-2 flex flex-col gap-3 sm:flex-row sm:justify-between">
             <Button
               type="button"
               variant="destructive"
               onClick={handleDelete}
-              disabled={deleting}
+              disabled={isDeleting || isSaving}
             >
-              {deleting ? "Tar bort..." : "Ta bort"}
+              {isDeleting ? "Tar bort..." : "Ta bort"}
             </Button>
 
             <div className="flex gap-2">
@@ -240,11 +224,12 @@ export function EditActivityDialog({ activity }: EditActivityDialogProps) {
                 type="button"
                 variant="outline"
                 onClick={() => handleOpenChange(false)}
+                disabled={isSaving || isDeleting}
               >
                 Avbryt
               </Button>
-              <Button type="submit" disabled={saving}>
-                {saving ? "Sparar..." : "Spara ändringar"}
+              <Button type="submit" disabled={isSaving || isDeleting}>
+                {isSaving ? "Sparar..." : "Spara ändringar"}
               </Button>
             </div>
           </DialogFooter>

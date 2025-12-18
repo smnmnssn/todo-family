@@ -2,6 +2,7 @@
 "use client";
 
 import * as React from "react";
+import { useTransition } from "react";
 import { createTodoList } from "@/app/todos/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,24 +21,23 @@ export default function CreateListDialog() {
   const [open, setOpen] = React.useState(false);
   const [title, setTitle] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
-  const [loading, setLoading] = React.useState(false);
+  const [isPending, startTransition] = useTransition();
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
-    setLoading(true);
 
-    const res = await createTodoList({ title });
+    startTransition(async () => {
+      const res = await createTodoList({ title });
 
-    setLoading(false);
+      if (!res.success) {
+        setError(res.error);
+        return;
+      }
 
-    if (!res.success) {
-      setError(res.error);
-      return;
-    }
-
-    setTitle("");
-    setOpen(false);
+      setTitle("");
+      setOpen(false);
+    });
   }
 
   return (
@@ -52,26 +52,21 @@ export default function CreateListDialog() {
         <DialogHeader>
           <DialogTitle>Ny lista</DialogTitle>
           <DialogDescription>
-            Skapa en ny todo-lista, till exempel &quot;Elin&quot;, &quot;Simon&quot; eller &quot;Packlista Norge&quot;.
+            Skapa en ny todo-lista, till exempel &quot;Elin&quot;,
+            &quot;Simon&quot; eller &quot;Packlista Norge&quot;.
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium">
-              Titel
-            </label>
+            <label className="text-sm font-medium">Titel</label>
             <Input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ange listans namn..."
               autoFocus
             />
-            {error && (
-              <p className="text-xs text-destructive">
-                {error}
-              </p>
-            )}
+            {error && <p className="text-xs text-destructive">{error}</p>}
           </div>
 
           <DialogFooter className="flex gap-2">
@@ -86,8 +81,8 @@ export default function CreateListDialog() {
             >
               Avbryt
             </Button>
-            <Button type="submit" disabled={loading || !title.trim()}>
-              {loading ? "Skapar..." : "Spara lista"}
+            <Button type="submit" disabled={isPending || !title.trim()}>
+              {isPending ? "Lägger till..." : "Spara lista"}
             </Button>
           </DialogFooter>
         </form>

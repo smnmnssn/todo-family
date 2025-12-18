@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { createActivity } from "../../app/calendar/actions";
 import { Button } from "@/components/ui/button";
@@ -18,8 +19,7 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 
 interface CreateActivityDialogProps {
-  /** Förifyllt datum i formatet YYYY-MM-DD */
-  date: string;
+  date: string; // YYYY-MM-DD
 }
 
 export function CreateActivityDialog({ date }: CreateActivityDialogProps) {
@@ -33,11 +33,23 @@ export function CreateActivityDialog({ date }: CreateActivityDialogProps) {
   const [allDay, setAllDay] = React.useState(false);
 
   const [error, setError] = React.useState<string | null>(null);
-  const [loading, setLoading] = React.useState(false);
+  const [isPending, startTransition] = useTransition();
 
-  async function handleSubmit(
-    event: React.FormEvent<HTMLFormElement>,
-  ): Promise<void> {
+  function resetForm(): void {
+    setTitle("");
+    setDescription("");
+    setStartTime("");
+    setEndTime("");
+    setAllDay(false);
+    setError(null);
+  }
+
+  function handleOpenChange(nextOpen: boolean): void {
+    setOpen(nextOpen);
+    if (!nextOpen) resetForm();
+  }
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>): void {
     event.preventDefault();
     setError(null);
 
@@ -51,39 +63,25 @@ export function CreateActivityDialog({ date }: CreateActivityDialogProps) {
       return;
     }
 
-    setLoading(true);
+    startTransition(async () => {
+      const result = await createActivity({
+        title: title.trim(),
+        description: description.trim() || undefined,
+        date,
+        startTime: allDay ? undefined : startTime || undefined,
+        endTime: allDay ? undefined : endTime || undefined,
+        allDay,
+      });
 
-    const result = await createActivity({
-      title: title.trim(),
-      description: description.trim() || undefined,
-      date,
-      startTime: allDay ? undefined : startTime || undefined,
-      endTime: allDay ? undefined : endTime || undefined,
-      allDay,
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
+
+      setOpen(false);
+      resetForm();
+      router.refresh();
     });
-
-    setLoading(false);
-
-    if (!result.success) {
-      setError(result.error);
-      return;
-    }
-
-    setTitle("");
-    setDescription("");
-    setStartTime("");
-    setEndTime("");
-    setAllDay(false);
-
-    setOpen(false);
-    router.refresh();
-  }
-
-  function handleOpenChange(nextOpen: boolean): void {
-    setOpen(nextOpen);
-    if (!nextOpen) {
-      setError(null);
-    }
   }
 
   return (
@@ -94,9 +92,7 @@ export function CreateActivityDialog({ date }: CreateActivityDialogProps) {
         </Button>
       </DialogTrigger>
 
-      <DialogContent
-        className="sm:max-w-lg rounded-3xl border border-white/70 bg-white/80 px-6 py-6 shadow-[0_18px_45px_rgba(15,23,42,0.18)] backdrop-blur-md"
-      >
+      <DialogContent className="sm:max-w-lg rounded-3xl border border-white/70 bg-white/80 px-6 py-6 shadow-[0_18px_45px_rgba(15,23,42,0.18)] backdrop-blur-md">
         <DialogHeader className="space-y-1.5">
           <DialogTitle className="text-lg font-semibold text-[#3b4a5c]">
             Ny aktivitet
@@ -109,9 +105,7 @@ export function CreateActivityDialog({ date }: CreateActivityDialogProps) {
 
         <form onSubmit={handleSubmit} className="mt-4 space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-[#3b4a5c]">
-              Titel
-            </label>
+            <label className="text-sm font-medium text-[#3b4a5c]">Titel</label>
             <Input
               value={title}
               onChange={(event) => setTitle(event.target.value)}
@@ -136,14 +130,11 @@ export function CreateActivityDialog({ date }: CreateActivityDialogProps) {
           </div>
 
           <div className="space-y-2">
-            <label className="text-sm font-medium text-[#3b4a5c]">
-              Datum
-            </label>
+            <label className="text-sm font-medium text-[#3b4a5c]">Datum</label>
             <Input
               type="date"
               value={date}
-              onChange={() => {
-              }}
+              onChange={() => {}}
               disabled
               className="bg-white/60 text-slate-600"
             />
@@ -156,10 +147,7 @@ export function CreateActivityDialog({ date }: CreateActivityDialogProps) {
                 checked={allDay}
                 onCheckedChange={(checked) => setAllDay(Boolean(checked))}
               />
-              <label
-                htmlFor="create-all-day"
-                className="text-sm text-slate-700"
-              >
+              <label htmlFor="create-all-day" className="text-sm text-slate-700">
                 Heldagsaktivitet
               </label>
             </div>
@@ -192,22 +180,19 @@ export function CreateActivityDialog({ date }: CreateActivityDialogProps) {
             </div>
           </div>
 
-          {error && (
-            <p className="text-xs text-destructive">
-              {error}
-            </p>
-          )}
+          {error && <p className="text-xs text-destructive">{error}</p>}
 
           <DialogFooter className="mt-2 flex gap-2 sm:justify-end">
             <Button
               type="button"
               variant="outline"
               onClick={() => handleOpenChange(false)}
+              disabled={isPending}
             >
               Avbryt
             </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Skapar..." : "Spara aktivitet"}
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Skapar..." : "Spara aktivitet"}
             </Button>
           </DialogFooter>
         </form>

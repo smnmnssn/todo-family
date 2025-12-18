@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
+import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { NoteDTO } from "../../app/notes/actions";
-import { updateNote, deleteNote } from "../../app/notes/actions";;
+import { updateNote, deleteNote } from "../../app/notes/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -28,8 +29,9 @@ export function NoteCard({ note }: NoteCardProps) {
   const [title, setTitle] = React.useState(note.title);
   const [content, setContent] = React.useState(note.content);
   const [error, setError] = React.useState<string | null>(null);
-  const [saving, setSaving] = React.useState(false);
-  const [deleting, setDeleting] = React.useState(false);
+
+  const [isSaving, startSave] = useTransition();
+  const [isDeleting, startDelete] = useTransition();
 
   function resetForm(): void {
     setTitle(note.title);
@@ -39,14 +41,10 @@ export function NoteCard({ note }: NoteCardProps) {
 
   function handleOpenChange(nextOpen: boolean): void {
     setOpen(nextOpen);
-    if (!nextOpen) {
-      resetForm();
-    }
+    if (!nextOpen) resetForm();
   }
 
-  async function handleSubmit(
-    event: React.FormEvent<HTMLFormElement>,
-  ): Promise<void> {
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>): void {
     event.preventDefault();
     setError(null);
 
@@ -60,52 +58,47 @@ export function NoteCard({ note }: NoteCardProps) {
       return;
     }
 
-    setSaving(true);
+    startSave(async () => {
+      const result = await updateNote({
+        id: note.id,
+        title: title.trim(),
+        content: content.trim(),
+      });
 
-    const result = await updateNote({
-      id: note.id,
-      title: title.trim(),
-      content: content.trim(),
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
+
+      setOpen(false);
+      router.refresh();
     });
-
-    setSaving(false);
-
-    if (!result.success) {
-      setError(result.error);
-      return;
-    }
-
-    setOpen(false);
-    router.refresh();
   }
 
-  async function handleDelete(): Promise<void> {
+  function handleDelete(): void {
     const confirmed = window.confirm(
       "Är du säker på att du vill ta bort den här anteckningen?",
     );
     if (!confirmed) return;
 
-    setDeleting(true);
     setError(null);
 
-    const result = await deleteNote({ id: note.id });
+    startDelete(async () => {
+      const result = await deleteNote({ id: note.id });
 
-    setDeleting(false);
+      if (!result.success) {
+        setError(result.error);
+        return;
+      }
 
-    if (!result.success) {
-      setError(result.error);
-      return;
-    }
-
-    router.refresh();
+      router.refresh();
+    });
   }
 
   return (
     <article className="rounded-2xl border border-white/70 bg-white/80 px-4 py-3 text-sm shadow-[0_12px_30px_rgba(15,23,42,0.16)] backdrop-blur-md">
       <div className="mb-2 flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-[#3b4a5c]">
-          {note.title}
-        </h3>
+        <h3 className="text-sm font-semibold text-[#3b4a5c]">{note.title}</h3>
 
         <div className="flex gap-2">
           <Button
@@ -113,19 +106,15 @@ export function NoteCard({ note }: NoteCardProps) {
             variant="outline"
             size="sm"
             onClick={handleDelete}
-            disabled={deleting}
+            disabled={isDeleting}
             className="h-7 px-2 text-[11px]"
           >
-            {deleting ? "Tar bort..." : "Ta bort"}
+            {isDeleting ? "Tar bort..." : "Ta bort"}
           </Button>
 
           <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
-              <Button
-                type="button"
-                size="sm"
-                className="h-7 px-3 text-[11px]"
-              >
+              <Button type="button" size="sm" className="h-7 px-3 text-[11px]">
                 Redigera
               </Button>
             </DialogTrigger>
@@ -165,22 +154,19 @@ export function NoteCard({ note }: NoteCardProps) {
                   />
                 </div>
 
-                {error && (
-                  <p className="text-xs text-destructive">
-                    {error}
-                  </p>
-                )}
+                {error && <p className="text-xs text-destructive">{error}</p>}
 
                 <DialogFooter className="mt-2 flex gap-2 sm:justify-end">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => handleOpenChange(false)}
+                    disabled={isSaving}
                   >
                     Avbryt
                   </Button>
-                  <Button type="submit" disabled={saving}>
-                    {saving ? "Sparar..." : "Spara ändringar"}
+                  <Button type="submit" disabled={isSaving}>
+                    {isSaving ? "Sparar..." : "Spara ändringar"}
                   </Button>
                 </DialogFooter>
               </form>
