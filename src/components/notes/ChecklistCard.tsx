@@ -19,7 +19,6 @@ interface ChecklistCardProps {
 
 export function ChecklistCard({ checklist }: ChecklistCardProps) {
   const router = useRouter();
-
   const [newItemText, setNewItemText] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
   const [loadingItem, setLoadingItem] = React.useState(false);
