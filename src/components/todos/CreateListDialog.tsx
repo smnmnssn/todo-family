@@ -2,7 +2,7 @@
 "use client";
 
 import * as React from "react";
-import { createTodoList } from "./actions";
+import { createTodoList } from "@/app/todos/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
