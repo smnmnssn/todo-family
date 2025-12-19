@@ -212,7 +212,7 @@ async function OverviewContent() {
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle>Checklistor</CardTitle>
             <Button asChild variant="outline" size="sm">
-              <Link href="/checklists">Visa alla</Link>
+              <Link href="/notes">Visa alla</Link>
             </Button>
           </CardHeader>
 
@@ -232,7 +232,7 @@ async function OverviewContent() {
                       </p>
                     </div>
                     <Button asChild variant="ghost" size="sm">
-                      <Link href="/checklists">Öppna</Link>
+                      <Link href="/notes">Öppna</Link>
                     </Button>
                   </div>
 
