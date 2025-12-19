@@ -2,21 +2,35 @@
 
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 export function LoginForm() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setError(null);
+    setIsLoading(true);
 
-    await signIn('credentials', {
-      redirect: true,
-      callbackUrl: '/',
-      mode: 'login',
+    const result = await signIn('credentials', {
+      redirect: false, 
       email,
       password,
     });
+
+    setIsLoading(false);
+
+    if (result?.error) {
+      setError('Fel email eller lösenord');
+      return;
+    }
+
+    router.push('/');
+    router.refresh(); 
   }
 
   return (
@@ -29,6 +43,8 @@ export function LoginForm() {
         className="block w-full border p-2 mb-2"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
+        disabled={isLoading}
+        required
       />
 
       <input
@@ -37,13 +53,20 @@ export function LoginForm() {
         className="block w-full border p-2 mb-4"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+        disabled={isLoading}
+        required
       />
+
+      {error && (
+        <p className="text-red-600 text-sm mb-3">{error}</p>
+      )}
 
       <button
         type="submit"
-        className="w-full bg-blue-600 text-white py-2 rounded"
+        className="w-full bg-blue-600 text-white py-2 rounded disabled:opacity-50"
+        disabled={isLoading}
       >
-        Logga in
+        {isLoading ? 'Loggar in...' : 'Logga in'}
       </button>
     </form>
   );

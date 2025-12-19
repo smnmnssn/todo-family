@@ -2,28 +2,53 @@
 
 import { useState } from 'react';
 import { signIn } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 export function RegisterForm() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-
     setError(null);
+    setIsLoading(true);
 
-    // signIn används även för register när vi skickar mode: 'register'
-    const result = await signIn('credentials', {
-      redirect: true,
-      callbackUrl: '/', 
-      mode: 'register', 
-      email,
-      password,
-    });
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
 
-    if (result?.error) {
-      setError('Kunde inte skapa konto. Användaren finns kanske redan?');
+      if (!res.ok) {
+        const data = (await res.json().catch(() => null)) as { error?: string } | null;
+        setError(data?.error ?? 'Kunde inte skapa konto.');
+        return;
+      }
+
+      const loginRes = await signIn('credentials', {
+        redirect: false,
+        callbackUrl: '/',
+        mode: 'login',
+        email,
+        password,
+      });
+
+      if (loginRes?.error) {
+        setError('Kontot skapades, men inloggningen misslyckades. Försök logga in.');
+        router.push('/login');
+        return;
+      }
+
+      router.push('/');
+      router.refresh();
+    } catch {
+      setError('Något gick fel. Försök igen.');
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -37,6 +62,7 @@ export function RegisterForm() {
         className="block w-full border p-2 mb-2"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
+        disabled={isLoading}
       />
 
       <input
@@ -45,17 +71,17 @@ export function RegisterForm() {
         className="block w-full border p-2 mb-4"
         value={password}
         onChange={(e) => setPassword(e.target.value)}
+        disabled={isLoading}
       />
 
-      {error && (
-        <p className="text-red-600 text-sm mb-3">{error}</p>
-      )}
+      {error && <p className="text-red-600 text-sm mb-3">{error}</p>}
 
       <button
         type="submit"
         className="w-full bg-green-600 text-white py-2 rounded"
+        disabled={isLoading}
       >
-        Skapa konto
+        {isLoading ? 'Skapar konto...' : 'Skapa konto'}
       </button>
     </form>
   );

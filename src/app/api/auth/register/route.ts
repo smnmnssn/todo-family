@@ -22,9 +22,9 @@ export async function POST(request: Request) {
       );
     }
 
-    if (password.length < 1) {
+    if (password.length < 3) {
       return NextResponse.json(
-        { error: 'Password must be at least 6 characters long' },
+        { error: 'Password must be at least 3 characters long' },
         { status: 400 }
       );
     }
