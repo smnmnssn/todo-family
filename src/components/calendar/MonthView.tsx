@@ -74,6 +74,102 @@ function getMonthName(month: number): string {
   return names[month - 1] ?? "";
 }
 
+function isWeekendUTC(date: Date): boolean {
+  const day = date.getUTCDay(); // 0=sön, 6=lör
+  return day === 0 || day === 6;
+}
+
+function addDaysUTC(date: Date, days: number): Date {
+  const d = new Date(date);
+  d.setUTCDate(d.getUTCDate() + days);
+  return d;
+}
+
+// Meeus/Jones/Butcher (Gregorian) - räknar ut när Påskdagen infaller
+function easterSundayUTC(year: number): Date {
+  const a = year % 19;
+  const b = Math.floor(year / 100);
+  const c = year % 100;
+  const d = Math.floor(b / 4);
+  const e = b % 4;
+  const f = Math.floor((b + 8) / 25);
+  const g = Math.floor((b - f + 1) / 3);
+  const h = (19 * a + b - d - g + 15) % 30;
+  const i = Math.floor(c / 4);
+  const k = c % 4;
+  const l = (32 + 2 * e + 2 * i - h - k) % 7;
+  const m = Math.floor((a + 11 * h + 22 * l) / 451);
+  const month = Math.floor((h + l - 7 * m + 114) / 31); // 3=Mar, 4=Apr
+  const day = ((h + l - 7 * m + 114) % 31) + 1;
+  return new Date(Date.UTC(year, month - 1, day));
+}
+
+function midsummerDayUTC(year: number): Date {
+  // Midsommardagen: lördag mellan 20–26 juni
+  for (let day = 20; day <= 26; day += 1) {
+    const d = new Date(Date.UTC(year, 5, day)); // juni
+    if (d.getUTCDay() === 6) return d;
+  }
+  return new Date(Date.UTC(year, 5, 20));
+}
+
+function allSaintsDayUTC(year: number): Date {
+  // Alla helgons dag: lördag mellan 31 okt – 6 nov
+  const start = new Date(Date.UTC(year, 9, 31)); // okt
+  for (let i = 0; i <= 6; i += 1) {
+    const d = addDaysUTC(start, i);
+    if (d.getUTCDay() === 6) return d;
+  }
+  return start;
+}
+
+function getSwedishHolidayNameUTC(date: Date): string | null {
+  const y = date.getUTCFullYear();
+  const m = date.getUTCMonth() + 1;
+  const d = date.getUTCDate();
+  const iso = formatIsoDate(date);
+
+  // Fasta helgdagar
+  if (m === 1 && d === 1) return "Nyårsdagen";
+  if (m === 1 && d === 6) return "Trettondagen";
+  if (m === 5 && d === 1) return "Första maj";
+  if (m === 6 && d === 6) return "Sveriges nationaldag";
+  if (m === 12 && d === 25) return "Juldagen";
+  if (m === 12 && d === 26) return "Annandag jul";
+
+  // Påskbaserade
+  const easter = easterSundayUTC(y);
+  const goodFriday = addDaysUTC(easter, -2);
+  const easterMonday = addDaysUTC(easter, 1);
+  const ascension = addDaysUTC(easter, 39);
+  const pentecost = addDaysUTC(easter, 49);
+
+  if (iso === formatIsoDate(goodFriday)) return "Långfredagen";
+  if (iso === formatIsoDate(easter)) return "Påskdagen";
+  if (iso === formatIsoDate(easterMonday)) return "Annandag påsk";
+  if (iso === formatIsoDate(ascension)) return "Kristi himmelsfärdsdag";
+  if (iso === formatIsoDate(pentecost)) return "Pingstdagen";
+
+  // Övriga helgdagar
+  if (iso === formatIsoDate(midsummerDayUTC(y))) return "Midsommardagen";
+  if (iso === formatIsoDate(allSaintsDayUTC(y))) return "Alla helgons dag";
+
+  return null;
+}
+
+function getWeekdayNameSvUTC(date: Date): string {
+  const names = [
+    "Söndag",
+    "Måndag",
+    "Tisdag",
+    "Onsdag",
+    "Torsdag",
+    "Fredag",
+    "Lördag",
+  ];
+  return names[date.getUTCDay()] ?? "";
+}
+
 export default function MonthView({ year, month, activities }: MonthViewProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -82,7 +178,6 @@ export default function MonthView({ year, month, activities }: MonthViewProps) {
 
   const cells = React.useMemo(() => buildMonthGrid(year, month), [year, month]);
 
-  // activity map per datum
   const activitiesByDate = React.useMemo(() => {
     const map: Record<string, ActivityDTO[]> = {};
 
@@ -119,6 +214,23 @@ export default function MonthView({ year, month, activities }: MonthViewProps) {
 
   const selectedActivities: ActivityDTO[] =
     activitiesByDate[selectedDate] ?? [];
+
+  const selectedDateObj = React.useMemo(() => {
+    const [y, m, d] = selectedDate.split("-").map(Number);
+    return new Date(Date.UTC(y, (m ?? 1) - 1, d ?? 1));
+  }, [selectedDate]);
+
+  const selectedHolidayName = React.useMemo(() => {
+    return getSwedishHolidayNameUTC(selectedDateObj);
+  }, [selectedDateObj]);
+
+  const selectedIsWeekend = React.useMemo(() => {
+    return isWeekendUTC(selectedDateObj);
+  }, [selectedDateObj]);
+
+  const selectedWeekdayName = React.useMemo(() => {
+    return getWeekdayNameSvUTC(selectedDateObj);
+  }, [selectedDateObj]);
 
   function goToMonth(nextYear: number, nextMonth: number): void {
     const search = new URLSearchParams();
@@ -200,6 +312,12 @@ export default function MonthView({ year, month, activities }: MonthViewProps) {
             const hasActivities = dayActivities.length > 0;
             const isToday = cell.iso === todayIso;
             const isSelected = cell.iso === selectedDate;
+            const holidayName = cell.inCurrentMonth
+              ? getSwedishHolidayNameUTC(cell.date)
+              : null;
+            const isHoliday = Boolean(holidayName);
+            const isWeekend = cell.inCurrentMonth && isWeekendUTC(cell.date);
+            const shouldBeRed = cell.inCurrentMonth && (isWeekend || isHoliday);
 
             return (
               <button
@@ -217,7 +335,13 @@ export default function MonthView({ year, month, activities }: MonthViewProps) {
                 )}
               >
                 <div className="flex w-full items-center justify-between">
-                  <span>{dayNumber}</span>
+                  <span
+                    className={cn(shouldBeRed && "text-red-600 font-semibold")}
+                    title={holidayName ?? undefined}
+                  >
+                    {dayNumber}
+                  </span>
+
                   {isToday && (
                     <span className="rounded-full bg-[#8FAEC9]/20 px-1.5 py-0.5 text-[10px] font-medium text-[#567A98]">
                       Idag
@@ -247,9 +371,15 @@ export default function MonthView({ year, month, activities }: MonthViewProps) {
         <header className="mb-3 flex items-center justify-between">
           <div>
             <h3 className="text-sm font-medium text-[#3b4a5c]">
-              Aktiviteter {selectedDate}
+              {selectedWeekdayName} {selectedDate}
             </h3>
-            <p className="text-xs text-slate-600">
+            {selectedHolidayName && (
+              <p className="mt-1 text-xs font-medium text-red-700">
+                {selectedHolidayName}
+              </p>
+            )}
+
+            <p className="text-xs text-slate-600 pt-1">
               Här visas alla aktiviteter för den valda dagen.
             </p>
           </div>
