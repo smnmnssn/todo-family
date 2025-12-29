@@ -75,8 +75,8 @@ function getMonthName(month: number): string {
 }
 
 function isWeekendUTC(date: Date): boolean {
-  const day = date.getUTCDay(); // 0=sön, 6=lör
-  return day === 0 || day === 6;
+  const day = date.getUTCDay(); // 0=sön
+  return day === 0;
 }
 
 function addDaysUTC(date: Date, days: number): Date {
@@ -304,7 +304,7 @@ export default function MonthView({ year, month, activities }: MonthViewProps) {
         </div>
 
         {/* Datumrutor */}
-        <div className="grid grid-cols-7 gap-2 text-sm">
+        <div className="grid grid-cols-7 gap-1 sm:gap-2 text-sm">
           {cells.map((cell) => {
             const dayNumber = cell.date.getUTCDate();
             const dayActivities: ActivityDTO[] =
@@ -325,7 +325,7 @@ export default function MonthView({ year, month, activities }: MonthViewProps) {
                 type="button"
                 onClick={() => setSelectedDate(cell.iso)}
                 className={cn(
-                  "flex h-16 flex-col items-center justify-between rounded-2xl border border-white/50 bg-white/60 px-2 py-1.5 text-xs shadow-sm shadow-slate-900/10 backdrop-blur-md transition-colors",
+                  "flex h-14 sm:h-16 flex-col items-center justify-between rounded-2xl border border-white/50 bg-white/60 px-2 py-1.5 text-xs shadow-sm shadow-slate-900/10 backdrop-blur-md transition-colors",
                   !cell.inCurrentMonth &&
                     "border-transparent bg-white/30 text-slate-400",
                   cell.inCurrentMonth && "hover:bg-white/80",

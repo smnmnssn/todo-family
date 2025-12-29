@@ -91,7 +91,7 @@ export default function TodoList({ list }: TodoListProps) {
           <Dialog open={editOpen} onOpenChange={setEditOpen}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8">
+                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Alternativ för lista">
                   <MoreVertical className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -107,7 +107,7 @@ export default function TodoList({ list }: TodoListProps) {
                   onClick={handleDeleteList}
                   disabled={isPending}
                 >
-                  <Trash2 className="size-3.5" />
+                  <Trash2 className="size-3.5" aria-label="Ta bort lista" />
                   Ta bort lista
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -179,6 +179,7 @@ export default function TodoList({ list }: TodoListProps) {
               >
                 <label className="flex flex-1 items-center gap-3">
                   <Checkbox
+                  aria-label="Markera uppgift som klar"
                     checked={todo.done}
                     onCheckedChange={async (checked) =>
                       await toggleTodoDone({ id: todo.id, done: !!checked })
@@ -198,6 +199,7 @@ export default function TodoList({ list }: TodoListProps) {
                 <Button
                   variant="ghost"
                   size="icon"
+                  aria-label="Ta bort uppgift"
                   className="h-8 w-8 text-muted-foreground hover:text-destructive"
                   disabled={deletingTodoId === todo.id}
                   onClick={async () => {

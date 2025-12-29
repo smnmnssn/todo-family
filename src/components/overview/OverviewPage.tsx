@@ -24,7 +24,7 @@ function SkeletonBlock({ className = "" }: { className?: string }) {
 
 function OverviewSkeleton() {
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6">
+    <div className="w-full">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         <Card className="lg:col-span-12">
           <CardHeader>
@@ -91,7 +91,7 @@ async function OverviewContent() {
   const data = await getOverviewData();
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 py-6">
+    <div className="w-full">
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         <Card className="lg:col-span-12">
           <CardHeader className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -103,7 +103,8 @@ async function OverviewContent() {
               </p>
             </div>
 
-            <div className="flex gap-2">
+            <div className="grid w-full gap-2 sm:w-auto sm:grid-cols-3">
+
               <Button asChild variant="outline">
                 <Link href="/calendar">Kalender</Link>
               </Button>

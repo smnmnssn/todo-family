@@ -3,12 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  CalendarDays,
-  CheckSquare,
-  Home,
-  ListChecks,
-} from "lucide-react";
+import { CalendarDays, CheckSquare, Home, ListChecks } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 type NavItem = {
@@ -56,7 +51,7 @@ export function AppSidebar({ items = defaultItems }: AppSidebarProps) {
     <aside
       className={cn(
         "hidden md:flex",
-        "h-[calc(100vh-4rem)] w-60 shrink-0", // 4rem = headerhöjd om du har det
+        "sticky h-[calc(100dvh-4rem)] w-60 shrink-0",
         "flex-col justify-between",
         "rounded-r-4xl border-r border-white/70 bg-white/60",
         "shadow-[0_18px_45px_rgba(15,23,42,0.18)] backdrop-blur-xl",
@@ -69,12 +64,10 @@ export function AppSidebar({ items = defaultItems }: AppSidebarProps) {
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-slate-500">
             Family &amp; Friends
           </p>
-          <p className="text-sm font-semibold text-[#3b4a5c]">
-            Organizer
-          </p>
+          <p className="text-sm font-semibold text-[#3b4a5c]">Organizer</p>
         </div>
 
-        <nav className="space-y-1">
+        <nav className="space-y-1" aria-label="Huvudmeny">
           {items.map((item) => {
             const Icon = item.icon;
             const isActive =
@@ -86,11 +79,13 @@ export function AppSidebar({ items = defaultItems }: AppSidebarProps) {
               <Link
                 key={item.label}
                 href={item.href}
+                aria-current={isActive ? "page" : undefined}
                 className={cn(
                   "flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition-all",
                   "text-slate-600 hover:text-[#3b4a5c]",
                   "hover:bg-white/90 hover:shadow-[0_8px_20px_rgba(15,23,42,0.12)]",
                   "border border-transparent",
+                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#8FAEC9] focus-visible:ring-offset-2",
                   isActive &&
                     "border-[#8FAEC9] bg-white/95 text-[#2e3f55] shadow-[0_10px_24px_rgba(15,23,42,0.18)]"
                 )}

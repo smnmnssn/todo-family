@@ -53,13 +53,6 @@ export default async function CalendarPage({
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#c5d7e6] py-8 px-4">
       <div className="mx-auto max-w-5xl space-y-8">
-        <header>
-          <h1 className="text-3xl font-semibold text-[#3b4a5c]">Kalender</h1>
-          <p className="text-sm text-slate-600">
-            Se familjens aktiviteter månadsvis.
-          </p>
-        </header>
-
         <MonthView year={year} month={month} activities={activities} />
       </div>
     </div>

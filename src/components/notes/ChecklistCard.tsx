@@ -142,6 +142,7 @@ export function ChecklistCard({ checklist }: ChecklistCardProps) {
         <div className="flex flex-1 items-center gap-2">
           <Checkbox
             checked={item.done}
+            aria-label="Markera som klar"
             onCheckedChange={() => handleToggleItem(item.id)}
             disabled={loadingToggleId === item.id}
             className="h-3.5 w-3.5"
@@ -183,6 +184,7 @@ export function ChecklistCard({ checklist }: ChecklistCardProps) {
       <form onSubmit={handleAddItem} className="mt-2 flex gap-2">
         <Input
           value={newItemText}
+          aria-label="Skapa ny uppgift"
           onChange={(event) => setNewItemText(event.target.value)}
           placeholder="Lägg till punkt..."
           className="h-8 rounded-lg bg-white/80 text-xs"
