@@ -1,6 +1,6 @@
 // app/todos/page.tsx
 import { getTodoLists } from "./actions";
-import TodoList from "../../components/todos/TodoList";
+import TodoList from "../../../components/todos/TodoList";
 import CreateListDialog from "@/components/todos/CreateListDialog";
 
 export default async function TodosPage() {

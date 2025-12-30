@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createNote } from "../../app/notes/actions";
+import { createNote } from "../../app/(app)/notes/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";

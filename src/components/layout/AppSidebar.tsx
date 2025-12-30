@@ -55,7 +55,7 @@ export function AppSidebar({ items = defaultItems }: AppSidebarProps) {
         "flex-col justify-between",
         "rounded-r-4xl border-r border-white/70 bg-white/60",
         "shadow-[0_18px_45px_rgba(15,23,42,0.18)] backdrop-blur-xl",
-        "px-4 py-6"
+        "px-4 py-6 mt-8"
       )}
     >
       {/* Övre del: logo / titel + navigation */}

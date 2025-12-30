@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { createActivity } from "../../app/calendar/actions";
+import { createActivity } from "../../app/(app)/calendar/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -147,7 +147,10 @@ export function CreateActivityDialog({ date }: CreateActivityDialogProps) {
                 checked={allDay}
                 onCheckedChange={(checked) => setAllDay(Boolean(checked))}
               />
-              <label htmlFor="create-all-day" className="text-sm text-slate-700">
+              <label
+                htmlFor="create-all-day"
+                className="text-sm text-slate-700"
+              >
                 Heldagsaktivitet
               </label>
             </div>

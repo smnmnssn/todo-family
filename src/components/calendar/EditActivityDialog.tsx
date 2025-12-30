@@ -3,8 +3,11 @@
 import * as React from "react";
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import type { ActivityDTO } from "../../app/calendar/actions";
-import { updateActivity, deleteActivity } from "../../app/calendar/actions";
+import type { ActivityDTO } from "../../app/(app)/calendar/actions";
+import {
+  updateActivity,
+  deleteActivity,
+} from "../../app/(app)/calendar/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,7 +32,9 @@ export function EditActivityDialog({ activity }: EditActivityDialogProps) {
   const [open, setOpen] = React.useState(false);
 
   const [title, setTitle] = React.useState(activity.title);
-  const [description, setDescription] = React.useState(activity.description ?? "");
+  const [description, setDescription] = React.useState(
+    activity.description ?? ""
+  );
   const [date, setDate] = React.useState(activity.date);
   const [startTime, setStartTime] = React.useState(activity.startTime ?? "");
   const [endTime, setEndTime] = React.useState(activity.endTime ?? "");
@@ -174,7 +179,10 @@ export function EditActivityDialog({ activity }: EditActivityDialogProps) {
                 onCheckedChange={(checked) => setAllDay(Boolean(checked))}
                 disabled={isSaving || isDeleting}
               />
-              <label htmlFor={`edit-all-day-${activity.id}`} className="text-sm text-slate-700">
+              <label
+                htmlFor={`edit-all-day-${activity.id}`}
+                className="text-sm text-slate-700"
+              >
                 Heldagsaktivitet
               </label>
             </div>

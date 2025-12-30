@@ -2,13 +2,13 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import type { ChecklistDTO } from "../../app/checklists/actions";
+import type { ChecklistDTO } from "../../app/(app)/checklists/actions";
 import {
   addChecklistItem,
   toggleChecklistItem,
   deleteChecklist,
   deleteChecklistItem,
-} from "../../app/checklists/actions";
+} from "../../app/(app)/checklists/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";

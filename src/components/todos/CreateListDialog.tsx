@@ -3,7 +3,7 @@
 
 import * as React from "react";
 import { useTransition } from "react";
-import { createTodoList } from "@/app/todos/actions";
+import { createTodoList } from "@/app/(app)/todos/actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -51,10 +51,7 @@ export default function CreateListDialog() {
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Ny lista</DialogTitle>
-          <DialogDescription>
-            Skapa en ny todo-lista, till exempel &quot;Elin&quot;,
-            &quot;Simon&quot; eller &quot;Packlista Norge&quot;.
-          </DialogDescription>
+          <DialogDescription>Skapa en ny todo-lista.</DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">

@@ -27,7 +27,7 @@ import {
   deleteTodo,
   deleteTodoList,
   updateTodoList,
-} from "../../app/todos/actions";
+} from "../../app/(app)/todos/actions";
 import CreateTodoDialog from "./CreateTodoDialog";
 
 type Todo = {
@@ -91,7 +91,12 @@ export default function TodoList({ list }: TodoListProps) {
           <Dialog open={editOpen} onOpenChange={setEditOpen}>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-8 w-8" aria-label="Alternativ för lista">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8"
+                  aria-label="Alternativ för lista"
+                >
                   <MoreVertical className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
@@ -179,7 +184,7 @@ export default function TodoList({ list }: TodoListProps) {
               >
                 <label className="flex flex-1 items-center gap-3">
                   <Checkbox
-                  aria-label="Markera uppgift som klar"
+                    aria-label="Markera uppgift som klar"
                     checked={todo.done}
                     onCheckedChange={async (checked) =>
                       await toggleTodoDone({ id: todo.id, done: !!checked })

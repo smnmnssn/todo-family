@@ -1,8 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import UserStatus from "../components/auth/UserStatus";
-import { AppSidebar } from "@/components/layout/AppSidebar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,9 +24,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="sv">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-slate-100`}
-      >
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <a
           href="#main"
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-white focus:px-3 focus:py-2 focus:text-sm focus:shadow"
@@ -36,23 +32,7 @@ export default function RootLayout({
           Hoppa till innehåll
         </a>
 
-        {/* HEADER */}
-        <header className="flex h-16 items-center justify-between border-b bg-white/60 px-6 shadow-sm backdrop-blur">
-          <h1 className="font-semibold text-[#3b4a5c] tracking-tight">
-            Family & Friends Organizer
-          </h1>
-          <UserStatus />
-        </header>
-
-        {/* SIDEBAR + CONTENT */}
-        <div className="flex h-full">
-          <AppSidebar />
-
-          {/* Main content */}
-          <main id="main" className="min-w-0 flex-1 p-4 md:p-8">
-            <div className="mx-auto w-full max-w-6xl">{children}</div>
-          </main>
-        </div>
+        {children}
       </body>
     </html>
   );
