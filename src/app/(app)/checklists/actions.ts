@@ -3,12 +3,36 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
 
 const CHECKLIST_REVALIDATE_PATH = "/notes";
 
 type ActionResult<T> =
   | { success: true; data: T }
   | { success: false; error: string };
+
+// --- Auth helper (DB-säker) ---
+
+async function requireUserId(): Promise<number> {
+  const session = await getServerSession(authOptions);
+  const email = session?.user?.email;
+
+  if (!email) {
+    throw new Error("Unauthorized");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true },
+  });
+
+  if (!user) {
+    throw new Error("Unauthorized");
+  }
+
+  return user.id;
+}
 
 // --- Scheman ---
 
@@ -95,11 +119,14 @@ function mapChecklistToDTO(checklist: {
   };
 }
 
-// --- READ: hämta alla checklistor ---
+// --- READ: hämta alla checklistor (för inloggad användare) ---
 
 export async function getChecklists(): Promise<ActionResult<ChecklistDTO[]>> {
   try {
+    const ownerId = await requireUserId();
+
     const lists = await prisma.checklist.findMany({
+      where: { ownerId },
       include: {
         items: {
           orderBy: { createdAt: "asc" },
@@ -124,22 +151,24 @@ export async function getChecklists(): Promise<ActionResult<ChecklistDTO[]>> {
 // --- CREATE: ny checklista ---
 
 export async function createChecklist(
-  values: z.infer<typeof createChecklistSchema>,
+  values: z.infer<typeof createChecklistSchema>
 ): Promise<ActionResult<{ id: string }>> {
   const parsed = createChecklistSchema.safeParse(values);
 
   if (!parsed.success) {
     return {
       success: false,
-      error:
-        parsed.error.issues[0]?.message ?? "Ogiltiga data för checklista.",
+      error: parsed.error.issues[0]?.message ?? "Ogiltiga data för checklista.",
     };
   }
 
   try {
+    const ownerId = await requireUserId();
+
     const created = await prisma.checklist.create({
       data: {
         title: parsed.data.title.trim(),
+        ownerId,
       },
     });
 
@@ -158,10 +187,10 @@ export async function createChecklist(
   }
 }
 
-// --- CREATE: nytt item i en lista ---
+// --- CREATE: nytt item i en lista (endast om checklistan ägs av usern) ---
 
 export async function addChecklistItem(
-  values: z.infer<typeof addItemSchema>,
+  values: z.infer<typeof addItemSchema>
 ): Promise<ActionResult<{ id: string }>> {
   const parsed = addItemSchema.safeParse(values);
 
@@ -169,16 +198,28 @@ export async function addChecklistItem(
     return {
       success: false,
       error:
-        parsed.error.issues[0]?.message ?? "Ogiltiga data för checklist-punkt.",
+        parsed.error.issues[0]?.message ??
+        "Ogiltiga data för checklist-punkt.",
     };
   }
 
   const { checklistId, text } = parsed.data;
 
   try {
+    const ownerId = await requireUserId();
+
+    const checklist = await prisma.checklist.findFirst({
+      where: { id: checklistId, ownerId },
+      select: { id: true },
+    });
+
+    if (!checklist) {
+      return { success: false, error: "Checklistan hittades inte." };
+    }
+
     const created = await prisma.checklistItem.create({
       data: {
-        checklistId,
+        checklistId: checklist.id,
         text: text.trim(),
       },
     });
@@ -195,10 +236,10 @@ export async function addChecklistItem(
   }
 }
 
-// --- UPDATE: toggla done på ett item ---
+// --- UPDATE: toggla done på ett item (endast om item tillhör userns checklista) ---
 
 export async function toggleChecklistItem(
-  values: z.infer<typeof toggleItemSchema>,
+  values: z.infer<typeof toggleItemSchema>
 ): Promise<ActionResult<null>> {
   const parsed = toggleItemSchema.safeParse(values);
 
@@ -212,23 +253,33 @@ export async function toggleChecklistItem(
   const { id } = parsed.data;
 
   try {
-    const existing = await prisma.checklistItem.findUnique({
-      where: { id },
+    const ownerId = await requireUserId();
+
+    const existing = await prisma.checklistItem.findFirst({
+      where: {
+        id,
+        checklist: { ownerId },
+      },
+      select: { id: true, done: true },
     });
 
     if (!existing) {
-      return {
-        success: false,
-        error: "Punkten hittades inte.",
-      };
+      return { success: false, error: "Punkten hittades inte." };
     }
 
-    await prisma.checklistItem.update({
-      where: { id },
+    const res = await prisma.checklistItem.updateMany({
+      where: {
+        id: existing.id,
+        checklist: { ownerId },
+      },
       data: {
         done: !existing.done,
       },
     });
+
+    if (res.count === 0) {
+      return { success: false, error: "Punkten hittades inte." };
+    }
 
     revalidatePath(CHECKLIST_REVALIDATE_PATH);
 
@@ -242,10 +293,10 @@ export async function toggleChecklistItem(
   }
 }
 
-// --- DELETE: ta bort en hel checklista ---
+// --- DELETE: ta bort en hel checklista (endast om den ägs av usern) ---
 
 export async function deleteChecklist(
-  values: z.infer<typeof deleteChecklistSchema>,
+  values: z.infer<typeof deleteChecklistSchema>
 ): Promise<ActionResult<null>> {
   const parsed = deleteChecklistSchema.safeParse(values);
 
@@ -257,8 +308,19 @@ export async function deleteChecklist(
   }
 
   try {
+    const ownerId = await requireUserId();
+
+    const checklist = await prisma.checklist.findFirst({
+      where: { id: parsed.data.id, ownerId },
+      select: { id: true },
+    });
+
+    if (!checklist) {
+      return { success: false, error: "Checklistan hittades inte." };
+    }
+
     await prisma.checklist.delete({
-      where: { id: parsed.data.id },
+      where: { id: checklist.id },
     });
 
     revalidatePath(CHECKLIST_REVALIDATE_PATH);
@@ -273,10 +335,10 @@ export async function deleteChecklist(
   }
 }
 
-// --- DELETE: ta bort en punkt ---
+// --- DELETE: ta bort en punkt (endast om den tillhör userns checklista) ---
 
 export async function deleteChecklistItem(
-  values: z.infer<typeof deleteItemSchema>,
+  values: z.infer<typeof deleteItemSchema>
 ): Promise<ActionResult<null>> {
   const parsed = deleteItemSchema.safeParse(values);
 
@@ -288,9 +350,18 @@ export async function deleteChecklistItem(
   }
 
   try {
-    await prisma.checklistItem.delete({
-      where: { id: parsed.data.id },
+    const ownerId = await requireUserId();
+
+    const res = await prisma.checklistItem.deleteMany({
+      where: {
+        id: parsed.data.id,
+        checklist: { ownerId },
+      },
     });
+
+    if (res.count === 0) {
+      return { success: false, error: "Punkten hittades inte." };
+    }
 
     revalidatePath(CHECKLIST_REVALIDATE_PATH);
 

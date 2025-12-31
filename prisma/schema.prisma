@@ -13,25 +13,26 @@ model User {
   createdAt    DateTime @default(now())
   name         String?
   passwordHash String
-  tasks        Task[]
+
+  todoLists  TodoList[]
+  checklists Checklist[]
+  notes      Note[]
+  activities Activity[]
 }
 
-model Task {
-  id         Int      @id @default(autoincrement())
-  title      String
-  status     String
-  priority   String
-  createdAt  DateTime @default(now())
-  authorId   Int
-  author     User     @relation(fields: [authorId], references: [id])
-}
 
 model TodoList {
   id        String   @id @default(cuid())
   title     String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  ownerId   Int
+  owner     User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
   todos     Todo[]
+
+  @@index([ownerId])
 }
 
 model Todo {
@@ -41,7 +42,10 @@ model Todo {
   listId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  list      TodoList @relation(fields: [listId], references: [id])
+
+  list      TodoList @relation(fields: [listId], references: [id], onDelete: Cascade)
+
+  @@index([listId])
 }
 
 model Checklist {
@@ -49,7 +53,13 @@ model Checklist {
   title     String
   createdAt DateTime        @default(now())
   updatedAt DateTime        @updatedAt
+
+  ownerId   Int
+  owner     User         @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
   items     ChecklistItem[]
+
+  @@index([ownerId])
 }
 
 model ChecklistItem {
@@ -59,7 +69,10 @@ model ChecklistItem {
   createdAt   DateTime  @default(now())
   done        Boolean   @default(false)
   updatedAt   DateTime  @updatedAt
+
   checklist   Checklist @relation(fields: [checklistId], references: [id], onDelete: Cascade)
+
+  @@index([checklistId])
 }
 
 model Note {
@@ -68,6 +81,11 @@ model Note {
   content   String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  ownerId   Int
+  owner     User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
 }
 
 model Activity {
@@ -80,4 +98,9 @@ model Activity {
   date        DateTime
   endTime     String?
   startTime   String?
+
+  ownerId     Int
+  owner       User    @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  @@index([ownerId])
 }

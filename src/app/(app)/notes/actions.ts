@@ -3,6 +3,8 @@
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
 
 const NOTES_REVALIDATE_PATH = "/notes";
 
@@ -38,6 +40,28 @@ export type NoteDTO = {
   updatedAt: string;
 };
 
+// --- Auth helper (DB-säker) ---
+
+async function requireUserId(): Promise<number> {
+  const session = await getServerSession(authOptions);
+  const email = session?.user?.email;
+
+  if (!email) {
+    throw new Error("Unauthorized");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true },
+  });
+
+  if (!user) {
+    throw new Error("Unauthorized");
+  }
+
+  return user.id;
+}
+
 // --- Helpers ---
 
 function mapNoteToDTO(note: {
@@ -56,14 +80,15 @@ function mapNoteToDTO(note: {
   };
 }
 
-// --- READ: hämta alla anteckningar ---
+// --- READ: hämta alla anteckningar (för inloggad användare) ---
 
 export async function getNotes(): Promise<ActionResult<NoteDTO[]>> {
   try {
+    const ownerId = await requireUserId();
+
     const notes = await prisma.note.findMany({
-      orderBy: {
-        updatedAt: "desc",
-      },
+      where: { ownerId },
+      orderBy: { updatedAt: "desc" },
     });
 
     return {
@@ -82,25 +107,27 @@ export async function getNotes(): Promise<ActionResult<NoteDTO[]>> {
 // --- CREATE ---
 
 export async function createNote(
-  values: z.infer<typeof createNoteSchema>,
+  values: z.infer<typeof createNoteSchema>
 ): Promise<ActionResult<{ id: string }>> {
   const parsed = createNoteSchema.safeParse(values);
 
   if (!parsed.success) {
     return {
       success: false,
-      error:
-        parsed.error.issues[0]?.message ?? "Ogiltiga data för anteckning.",
+      error: parsed.error.issues[0]?.message ?? "Ogiltiga data för anteckning.",
     };
   }
 
   const { title, content } = parsed.data;
 
   try {
+    const ownerId = await requireUserId();
+
     const created = await prisma.note.create({
       data: {
         title: title.trim(),
         content: content.trim(),
+        ownerId,
       },
     });
 
@@ -122,28 +149,33 @@ export async function createNote(
 // --- UPDATE ---
 
 export async function updateNote(
-  values: z.infer<typeof updateNoteSchema>,
+  values: z.infer<typeof updateNoteSchema>
 ): Promise<ActionResult<null>> {
   const parsed = updateNoteSchema.safeParse(values);
 
   if (!parsed.success) {
     return {
       success: false,
-      error:
-        parsed.error.issues[0]?.message ?? "Ogiltiga data för anteckning.",
+      error: parsed.error.issues[0]?.message ?? "Ogiltiga data för anteckning.",
     };
   }
 
   const { id, title, content } = parsed.data;
 
   try {
-    await prisma.note.update({
-      where: { id },
+    const ownerId = await requireUserId();
+
+    const res = await prisma.note.updateMany({
+      where: { id, ownerId },
       data: {
         title: title.trim(),
         content: content.trim(),
       },
     });
+
+    if (res.count === 0) {
+      return { success: false, error: "Anteckningen hittades inte." };
+    }
 
     revalidatePath(NOTES_REVALIDATE_PATH);
 
@@ -160,7 +192,7 @@ export async function updateNote(
 // --- DELETE ---
 
 export async function deleteNote(
-  values: z.infer<typeof deleteNoteSchema>,
+  values: z.infer<typeof deleteNoteSchema>
 ): Promise<ActionResult<null>> {
   const parsed = deleteNoteSchema.safeParse(values);
 
@@ -172,9 +204,15 @@ export async function deleteNote(
   }
 
   try {
-    await prisma.note.delete({
-      where: { id: parsed.data.id },
+    const ownerId = await requireUserId();
+
+    const res = await prisma.note.deleteMany({
+      where: { id: parsed.data.id, ownerId },
     });
+
+    if (res.count === 0) {
+      return { success: false, error: "Anteckningen hittades inte." };
+    }
 
     revalidatePath(NOTES_REVALIDATE_PATH);
 

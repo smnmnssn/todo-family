@@ -4,12 +4,36 @@ import { prisma } from "@/lib/prisma";
 import { Activity } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
 
-const CALENDAR_REVALIDATE_PATH = "/calendar"; 
+const CALENDAR_REVALIDATE_PATH = "/calendar";
 
 type ActionResult<T> =
   | { success: true; data: T }
   | { success: false; error: string };
+
+// --- Auth helper (DB-säker) ---
+
+async function requireUserId(): Promise<number> {
+  const session = await getServerSession(authOptions);
+  const email = session?.user?.email;
+
+  if (!email) {
+    throw new Error("Unauthorized");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true },
+  });
+
+  if (!user) {
+    throw new Error("Unauthorized");
+  }
+
+  return user.id;
+}
 
 // --- Helpers ---
 
@@ -88,7 +112,7 @@ function mapActivityToDTO(a: Activity): ActivityDTO {
   };
 }
 
-// --- READ: hämta aktiviteter för en månad ---
+// --- READ: hämta aktiviteter för en månad (för inloggad användare) ---
 
 export async function getActivitiesForMonth(
   params: z.infer<typeof monthQuerySchema>
@@ -97,7 +121,8 @@ export async function getActivitiesForMonth(
   if (!parsed.success) {
     return {
       success: false,
-      error: parsed.error.issues[0]?.message ?? "Ogiltiga parametrar för månad.",
+      error:
+        parsed.error.issues[0]?.message ?? "Ogiltiga parametrar för månad.",
     };
   }
 
@@ -107,18 +132,17 @@ export async function getActivitiesForMonth(
   const end = new Date(Date.UTC(year, month, 1)); // exklusiv
 
   try {
+    const ownerId = await requireUserId();
+
     const activities = await prisma.activity.findMany({
       where: {
+        ownerId,
         date: {
           gte: start,
           lt: end,
         },
       },
-      orderBy: [
-        { date: "asc" },
-        { startTime: "asc" },
-        { title: "asc" },
-      ],
+      orderBy: [{ date: "asc" }, { startTime: "asc" }, { title: "asc" }],
     });
 
     return {
@@ -142,8 +166,10 @@ export async function getActivityById(
   }
 
   try {
-    const activity = await prisma.activity.findUnique({
-      where: { id },
+    const ownerId = await requireUserId();
+
+    const activity = await prisma.activity.findFirst({
+      where: { id, ownerId },
     });
 
     if (!activity) {
@@ -166,15 +192,19 @@ export async function createActivity(
   if (!parsed.success) {
     return {
       success: false,
-      error: parsed.error.issues[0]?.message ?? "Ogiltiga data för aktivitet.",
+      error:
+        parsed.error.issues[0]?.message ?? "Ogiltiga data för aktivitet.",
     };
   }
 
   const { title, description, date, startTime, endTime, allDay } = parsed.data;
 
   try {
+    const ownerId = await requireUserId();
+
     const created = await prisma.activity.create({
       data: {
+        ownerId,
         title,
         description,
         date: parseDateOnly(date),
@@ -205,7 +235,8 @@ export async function updateActivity(
   if (!parsed.success) {
     return {
       success: false,
-      error: parsed.error.issues[0]?.message ?? "Ogiltiga data för aktivitet.",
+      error:
+        parsed.error.issues[0]?.message ?? "Ogiltiga data för aktivitet.",
     };
   }
 
@@ -213,8 +244,10 @@ export async function updateActivity(
     parsed.data;
 
   try {
-    await prisma.activity.update({
-      where: { id },
+    const ownerId = await requireUserId();
+
+    const res = await prisma.activity.updateMany({
+      where: { id, ownerId },
       data: {
         title,
         description,
@@ -224,6 +257,10 @@ export async function updateActivity(
         allDay: allDay ?? false,
       },
     });
+
+    if (res.count === 0) {
+      return { success: false, error: "Aktiviteten hittades inte." };
+    }
 
     revalidatePath(CALENDAR_REVALIDATE_PATH);
 
@@ -248,9 +285,15 @@ export async function deleteActivity(
   }
 
   try {
-    await prisma.activity.delete({
-      where: { id: parsed.data.id },
+    const ownerId = await requireUserId();
+
+    const res = await prisma.activity.deleteMany({
+      where: { id: parsed.data.id, ownerId },
     });
+
+    if (res.count === 0) {
+      return { success: false, error: "Aktiviteten hittades inte." };
+    }
 
     revalidatePath(CALENDAR_REVALIDATE_PATH);
 

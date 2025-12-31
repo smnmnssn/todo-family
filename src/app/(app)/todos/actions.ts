@@ -3,20 +3,41 @@
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
 
 const TODO_REVALIDATE_PATH = "/todos";
 
-/**
- * Gemensamt svar för server actions
- */
 type ActionResult<T> =
   | { success: true; data: T }
   | { success: false; error: string };
 
 /**
+ * Auth helper (DB-säker)
+ */
+async function requireUserId(): Promise<number> {
+  const session = await getServerSession(authOptions);
+  const email = session?.user?.email;
+
+  if (!email) {
+    throw new Error("Unauthorized");
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { email },
+    select: { id: true },
+  });
+
+  if (!user) {
+    throw new Error("Unauthorized");
+  }
+
+  return user.id;
+}
+
+/**
  * Zod-scheman
  */
-
 const todoListCreateSchema = z.object({
   title: z.string().min(1, "Listan måste ha en titel").max(100),
 });
@@ -47,7 +68,7 @@ const idSchema = z.object({
 
 /**
  * READ
- * Hämta alla listor med deras todos
+ * Hämta alla listor (för inloggad användare) med deras todos
  */
 export async function getTodoLists(): Promise<
   ActionResult<
@@ -67,7 +88,10 @@ export async function getTodoLists(): Promise<
   >
 > {
   try {
+    const ownerId = await requireUserId();
+
     const lists = await prisma.todoList.findMany({
+      where: { ownerId },
       orderBy: { createdAt: "asc" },
       include: {
         todos: {
@@ -85,20 +109,26 @@ export async function getTodoLists(): Promise<
 
 /**
  * CREATE
- * Skapa ny lista
+ * Skapa ny lista (kopplas till inloggad användare)
  */
 export async function createTodoList(
   values: z.infer<typeof todoListCreateSchema>
 ): Promise<ActionResult<{ id: string }>> {
   const parsed = todoListCreateSchema.safeParse(values);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Ogiltiga data för lista." };
+    return {
+      success: false,
+      error: parsed.error.issues[0]?.message ?? "Ogiltiga data för lista.",
+    };
   }
 
   try {
+    const ownerId = await requireUserId();
+
     const list = await prisma.todoList.create({
       data: {
-        title: parsed.data.title,
+        title: parsed.data.title.trim(),
+        ownerId,
       },
     });
 
@@ -112,21 +142,30 @@ export async function createTodoList(
 
 /**
  * UPDATE
- * Byt titel på lista
+ * Byt titel på lista (endast om listan tillhör användaren)
  */
 export async function updateTodoList(
   values: z.infer<typeof todoListUpdateSchema>
 ): Promise<ActionResult<null>> {
   const parsed = todoListUpdateSchema.safeParse(values);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Ogiltiga data för lista." };
+    return {
+      success: false,
+      error: parsed.error.issues[0]?.message ?? "Ogiltiga data för lista.",
+    };
   }
 
   try {
-    await prisma.todoList.update({
-      where: { id: parsed.data.id },
-      data: { title: parsed.data.title },
+    const ownerId = await requireUserId();
+
+    const res = await prisma.todoList.updateMany({
+      where: { id: parsed.data.id, ownerId },
+      data: { title: parsed.data.title.trim() },
     });
+
+    if (res.count === 0) {
+      return { success: false, error: "Listan hittades inte." };
+    }
 
     revalidatePath(TODO_REVALIDATE_PATH);
     return { success: true, data: null };
@@ -138,7 +177,7 @@ export async function updateTodoList(
 
 /**
  * DELETE
- * Ta bort lista + alla dess todos
+ * Ta bort lista + alla dess todos (endast om listan tillhör användaren)
  */
 export async function deleteTodoList(
   values: z.infer<typeof idSchema>
@@ -149,8 +188,19 @@ export async function deleteTodoList(
   }
 
   try {
+    const ownerId = await requireUserId();
+
+    const list = await prisma.todoList.findFirst({
+      where: { id: parsed.data.id, ownerId },
+      select: { id: true },
+    });
+
+    if (!list) {
+      return { success: false, error: "Listan hittades inte." };
+    }
+
     await prisma.todoList.delete({
-      where: { id: parsed.data.id },
+      where: { id: list.id },
     });
 
     revalidatePath(TODO_REVALIDATE_PATH);
@@ -163,21 +213,35 @@ export async function deleteTodoList(
 
 /**
  * CREATE
- * Skapa ny todo i en lista
+ * Skapa ny todo i en lista (endast om listan tillhör användaren)
  */
 export async function createTodo(
   values: z.infer<typeof todoCreateSchema>
 ): Promise<ActionResult<{ id: string }>> {
   const parsed = todoCreateSchema.safeParse(values);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Ogiltiga data för todo." };
+    return {
+      success: false,
+      error: parsed.error.issues[0]?.message ?? "Ogiltiga data för todo.",
+    };
   }
 
   try {
+    const ownerId = await requireUserId();
+
+    const list = await prisma.todoList.findFirst({
+      where: { id: parsed.data.listId, ownerId },
+      select: { id: true },
+    });
+
+    if (!list) {
+      return { success: false, error: "Listan hittades inte." };
+    }
+
     const todo = await prisma.todo.create({
       data: {
-        title: parsed.data.title,
-        listId: parsed.data.listId,
+        title: parsed.data.title.trim(),
+        listId: list.id,
       },
     });
 
@@ -191,21 +255,33 @@ export async function createTodo(
 
 /**
  * UPDATE
- * Uppdatera titel på todo
+ * Uppdatera titel på todo (endast om todo ligger i en lista som usern äger)
  */
 export async function updateTodo(
   values: z.infer<typeof todoUpdateSchema>
 ): Promise<ActionResult<null>> {
   const parsed = todoUpdateSchema.safeParse(values);
   if (!parsed.success) {
-    return { success: false, error: parsed.error.issues[0]?.message ?? "Ogiltiga data för todo." };
+    return {
+      success: false,
+      error: parsed.error.issues[0]?.message ?? "Ogiltiga data för todo.",
+    };
   }
 
   try {
-    await prisma.todo.update({
-      where: { id: parsed.data.id },
-      data: { title: parsed.data.title },
+    const ownerId = await requireUserId();
+
+    const res = await prisma.todo.updateMany({
+      where: {
+        id: parsed.data.id,
+        list: { ownerId },
+      },
+      data: { title: parsed.data.title.trim() },
     });
+
+    if (res.count === 0) {
+      return { success: false, error: "Todo hittades inte." };
+    }
 
     revalidatePath(TODO_REVALIDATE_PATH);
     return { success: true, data: null };
@@ -217,7 +293,7 @@ export async function updateTodo(
 
 /**
  * TOGGLE
- * Sätt done true/false
+ * Sätt done true/false (endast om todo ligger i en lista som usern äger)
  */
 export async function toggleTodoDone(
   values: z.infer<typeof todoToggleSchema>
@@ -228,10 +304,19 @@ export async function toggleTodoDone(
   }
 
   try {
-    await prisma.todo.update({
-      where: { id: parsed.data.id },
+    const ownerId = await requireUserId();
+
+    const res = await prisma.todo.updateMany({
+      where: {
+        id: parsed.data.id,
+        list: { ownerId },
+      },
       data: { done: parsed.data.done },
     });
+
+    if (res.count === 0) {
+      return { success: false, error: "Todo hittades inte." };
+    }
 
     revalidatePath(TODO_REVALIDATE_PATH);
     return { success: true, data: null };
@@ -243,7 +328,7 @@ export async function toggleTodoDone(
 
 /**
  * DELETE
- * Ta bort en todo
+ * Ta bort en todo (endast om todo ligger i en lista som usern äger)
  */
 export async function deleteTodo(
   values: z.infer<typeof idSchema>
@@ -254,9 +339,18 @@ export async function deleteTodo(
   }
 
   try {
-    await prisma.todo.delete({
-      where: { id: parsed.data.id },
+    const ownerId = await requireUserId();
+
+    const res = await prisma.todo.deleteMany({
+      where: {
+        id: parsed.data.id,
+        list: { ownerId },
+      },
     });
+
+    if (res.count === 0) {
+      return { success: false, error: "Todo hittades inte." };
+    }
 
     revalidatePath(TODO_REVALIDATE_PATH);
     return { success: true, data: null };
