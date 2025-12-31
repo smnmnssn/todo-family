@@ -111,75 +111,73 @@ export function ChecklistCard({ checklist }: ChecklistCardProps) {
   }
 
   return (
-    <article className="rounded-2xl border border-white/70 bg-white/80 px-4 py-3 text-sm shadow-[0_12px_30px_rgba(15,23,42,0.16)] backdrop-blur-md">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-[#3b4a5c]">
+    <article className="rounded-3xl border border-white/40 bg-white/10 px-4 py-3 text-sm shadow-[0_18px_45px_rgba(15,23,42,0.14)] backdrop-blur-md">
+      <div className="mb-2 flex items-start justify-between gap-3">
+        <h3 className="min-w-0 truncate text-sm font-semibold text-slate-900">
           {checklist.title}
         </h3>
+
         <Button
           type="button"
           variant="outline"
           size="sm"
           onClick={handleDeleteChecklist}
           disabled={loadingDelete}
-          className="h-7 px-2 text-[11px]"
+          className="h-8 rounded-full border-white/40 bg-white/20 text-xs hover:bg-white/30"
         >
           {loadingDelete ? "Tar bort..." : "Ta bort lista"}
         </Button>
       </div>
 
       {checklist.items.length === 0 ? (
-  <p className="mb-2 text-xs text-slate-500">
-    Inga punkter ännu. Lägg till din första punkt nedan.
-  </p>
-) : (
-  <ul className="mb-3 space-y-1 text-xs">
-    {checklist.items.map((item) => (
-      <li
-        key={item.id}
-        className="flex items-center justify-between gap-2"
-      >
-        <div className="flex flex-1 items-center gap-2">
-          <Checkbox
-            checked={item.done}
-            aria-label="Markera som klar"
-            onCheckedChange={() => handleToggleItem(item.id)}
-            disabled={loadingToggleId === item.id}
-            className="h-3.5 w-3.5"
-          />
-          <button
-            type="button"
-            onClick={() => handleToggleItem(item.id)}
-            disabled={loadingToggleId === item.id}
-            className="flex-1 text-left"
-          >
-            <span
-              className={
-                item.done
-                  ? "line-through text-slate-400"
-                  : "text-slate-800"
-              }
-            >
-              {item.text}
-            </span>
-          </button>
-        </div>
+        <p className="mb-3 text-xs text-slate-700/80">
+          Inga punkter ännu. Lägg till din första punkt nedan.
+        </p>
+      ) : (
+        <ul className="mb-3 space-y-1 text-xs">
+          {checklist.items.map((item) => (
+            <li key={item.id} className="flex items-center justify-between gap-2">
+              <div className="flex flex-1 items-center gap-2">
+                <Checkbox
+                  checked={item.done}
+                  aria-label="Markera som klar"
+                  onCheckedChange={() => handleToggleItem(item.id)}
+                  disabled={loadingToggleId === item.id}
+                  className="h-3.5 w-3.5"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleToggleItem(item.id)}
+                  disabled={loadingToggleId === item.id}
+                  className="flex-1 text-left"
+                >
+                  <span
+                    className={
+                      item.done
+                        ? "line-through text-slate-600/70"
+                        : "text-slate-900"
+                    }
+                  >
+                    {item.text}
+                  </span>
+                </button>
+              </div>
 
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={() => handleDeleteItem(item.id)}
-          disabled={loadingDeleteItemId === item.id}
-          className="h-7 px-2 text-[11px] text-slate-500 hover:text-slate-700"
-        >
-          ✕
-        </Button>
-      </li>
-    ))}
-  </ul>
-)}
-
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => handleDeleteItem(item.id)}
+                disabled={loadingDeleteItemId === item.id}
+                className="h-8 w-8 rounded-full border border-transparent bg-transparent p-0 text-slate-700/70 hover:border-white/30 hover:bg-white/15 hover:text-slate-900"
+                aria-label="Ta bort punkt"
+              >
+                ✕
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
 
       <form onSubmit={handleAddItem} className="mt-2 flex gap-2">
         <Input
@@ -187,23 +185,14 @@ export function ChecklistCard({ checklist }: ChecklistCardProps) {
           aria-label="Skapa ny uppgift"
           onChange={(event) => setNewItemText(event.target.value)}
           placeholder="Lägg till punkt..."
-          className="h-8 rounded-lg bg-white/80 text-xs"
+          className="h-9 rounded-2xl bg-white/70 text-xs"
         />
-        <Button
-          type="submit"
-          size="sm"
-          disabled={loadingItem}
-          className="h-8 px-3 text-xs"
-        >
+        <Button type="submit" size="sm" disabled={loadingItem} className="h-9 rounded-2xl px-3 text-xs">
           {loadingItem ? "Lägger till..." : "Lägg till"}
         </Button>
       </form>
 
-      {error && (
-        <p className="mt-2 text-xs text-destructive">
-          {error}
-        </p>
-      )}
+      {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
     </article>
   );
 }

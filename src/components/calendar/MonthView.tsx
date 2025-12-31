@@ -260,7 +260,9 @@ export default function MonthView({ year, month, activities }: MonthViewProps) {
   }
 
   return (
+  <div className="rounded-[32px] border border-white/40 bg-white/10 p-5 shadow-[0_28px_80px_rgba(15,23,42,0.16)] backdrop-blur-xl md:p-8">
     <div className="space-y-6">
+
       {/* Månadsheader med pilar */}
       <div className="flex items-center justify-between">
         <div className="space-y-0.5">
@@ -293,7 +295,8 @@ export default function MonthView({ year, month, activities }: MonthViewProps) {
       </div>
 
       {/* Kalenderkort (glas) */}
-      <div className="rounded-3xl border border-white/60 bg-white/40 p-4 md:p-6 shadow-[0_18px_45px_rgba(15,23,42,0.18)] backdrop-blur-md">
+      <div className="glass-surface p-4 md:p-6">
+
         {/* Veckodagar */}
         <div className="mb-2 grid grid-cols-7 text-center text-xs font-medium text-[#567A98]">
           {WEEKDAYS.map((day) => (
@@ -328,10 +331,10 @@ export default function MonthView({ year, month, activities }: MonthViewProps) {
                   "flex h-14 sm:h-16 flex-col items-center justify-between rounded-2xl border border-white/50 bg-white/60 px-2 py-1.5 text-xs shadow-sm shadow-slate-900/10 backdrop-blur-md transition-colors",
                   !cell.inCurrentMonth &&
                     "border-transparent bg-white/30 text-slate-400",
-                  cell.inCurrentMonth && "hover:bg-white/80",
-                  isSelected &&
-                    "border-[#8FAEC9] ring-2 ring-[#8FAEC9]/40 bg-white",
-                  isToday && !isSelected && "border-[#8FAEC9]"
+                  cell.inCurrentMonth && "hover:bg-white/25",
+isSelected && "border-white/60 ring-2 ring-sky-500/25 bg-white/25",
+isToday && !isSelected && "border-sky-500/35",
+
                 )}
               >
                 <div className="flex w-full items-center justify-between">
@@ -429,5 +432,7 @@ export default function MonthView({ year, month, activities }: MonthViewProps) {
         )}
       </section>
     </div>
+        </div>
+
   );
 }

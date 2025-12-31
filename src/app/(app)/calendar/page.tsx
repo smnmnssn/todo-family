@@ -38,23 +38,25 @@ export default async function CalendarPage({
 
   if (!result.success) {
     return (
-      <div className="min-h-[calc(100vh-4rem)] bg-[#c5d7e6] py-8 px-4">
-        <div className="mx-auto max-w-5xl">
-          <p className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-            {result.error}
-          </p>
-        </div>
-      </div>
-    );
+  <div className="w-full p-4 md:p-8">
+    <div className="mx-auto w-full max-w-6xl">
+      <p className="rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive shadow-[0_10px_24px_rgba(15,23,42,0.10)] backdrop-blur-md">
+        {result.error}
+      </p>
+    </div>
+  </div>
+);
+
   }
 
   const activities: ActivityDTO[] = result.data;
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#c5d7e6] py-8 px-4">
-      <div className="mx-auto max-w-5xl space-y-8">
-        <MonthView year={year} month={month} activities={activities} />
-      </div>
+  <div className="w-full p-4 md:p-8">
+    <div className="mx-auto w-full max-w-6xl">
+      <MonthView year={year} month={month} activities={activities} />
     </div>
-  );
+  </div>
+);
+
 }

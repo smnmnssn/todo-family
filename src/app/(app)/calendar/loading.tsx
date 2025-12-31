@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export default function LoadingCalendar() {
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#c5d7e6] py-8 px-4">
+    <div className="min-h-[calc(100vh-4rem)] py-8 px-4">
       <div className="mx-auto max-w-5xl space-y-8">
         <header className="space-y-2">
           <Skeleton className="h-9 w-48" />

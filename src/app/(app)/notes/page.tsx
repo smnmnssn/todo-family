@@ -15,44 +15,48 @@ export default async function NotesPage() {
   const hasError = !checklistsResult.success || !notesResult.success;
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[radial-gradient(circle_at_top,#dbe7f3,#c5d7e6_45%,#eef2f7_100%)] px-4 py-10">
-      <div className="mx-auto flex max-w-6xl flex-col gap-6">
-        <header className="mb-2">
-          <h1 className="text-2xl font-semibold tracking-tight text-[#3b4a5c]">
-            Listor &amp; anteckningar
-          </h1>
-          <p className="text-sm text-slate-600">
-            Samla checklistor och fria anteckningar på ett och samma ställe.
-          </p>
-        </header>
+    <div className="w-full p-4 md:p-8">
+      <div className="mx-auto w-full max-w-6xl">
+        {/* OUTER GLASS FRAME */}
+        <div className="rounded-[32px] border border-white/40 bg-white/10 p-5 shadow-[0_28px_80px_rgba(15,23,42,0.16)] backdrop-blur-xl md:p-8">
+          <header className="mb-6">
+            <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
+              Listor &amp; anteckningar
+            </h1>
+            <p className="text-sm text-slate-700/80">
+              Samla checklistor och fria anteckningar på ett och samma ställe.
+            </p>
+          </header>
 
-        {hasError && (
-          <div className="rounded-xl border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive backdrop-blur-md">
-            {!checklistsResult.success && <p>{checklistsResult.error}</p>}
-            {!notesResult.success && <p>{notesResult.error}</p>}
-          </div>
-        )}
+          {hasError && (
+            <div className="mb-6 rounded-2xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive shadow-[0_10px_24px_rgba(15,23,42,0.10)] backdrop-blur-md">
+              {!checklistsResult.success && <p>{checklistsResult.error}</p>}
+              {!notesResult.success && <p>{notesResult.error}</p>}
+            </div>
+          )}
 
-        <div className="rounded-[1.75rem] border border-white/70 bg-white/50 p-6 shadow-[0_18px_45px_rgba(15,23,42,0.18)] backdrop-blur-lg">
+          {/* INNER GRID */}
           <div className="grid gap-8 md:grid-cols-2">
             {/* Checklistor */}
             <section className="space-y-4">
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h2 className="text-lg font-medium text-[#3b4a5c]">
+                  <h2 className="text-lg font-medium text-slate-900">
                     Checklistor
                   </h2>
-                  <p className="text-xs text-slate-600">
+                  <p className="text-xs text-slate-700/80">
                     Shoppinglistor, packlistor och andra att-göra-listor.
                   </p>
                 </div>
+
+                {/* INGEN wrapper runt knapp */}
                 <NewChecklistDialog />
               </div>
 
               <div className="space-y-3">
                 {checklistsResult.success &&
                   checklistsResult.data.length === 0 && (
-                    <div className="rounded-xl border border-dashed border-slate-300/70 bg-white/60 px-4 py-3 text-sm text-slate-500 backdrop-blur-sm">
+                    <div className="rounded-3xl border border-white/40 bg-white/10 px-4 py-3 text-sm text-slate-700/80 shadow-[0_18px_45px_rgba(15,23,42,0.14)] backdrop-blur-md">
                       Du har inga checklistor ännu. Skapa din första lista för
                       att komma igång.
                     </div>
@@ -67,21 +71,23 @@ export default async function NotesPage() {
 
             {/* Anteckningar */}
             <section className="space-y-4">
-              <div className="flex items-center justify-between gap-2">
+              <div className="flex items-start justify-between gap-3">
                 <div>
-                  <h2 className="text-lg font-medium text-[#3b4a5c]">
+                  <h2 className="text-lg font-medium text-slate-900">
                     Anteckningar
                   </h2>
-                  <p className="text-xs text-slate-600">
+                  <p className="text-xs text-slate-700/80">
                     Snabba minnesanteckningar, idéer och annat du vill spara.
                   </p>
                 </div>
+
+                {/* INGEN wrapper runt knapp */}
                 <NewNoteDialog />
               </div>
 
               <div className="space-y-3">
                 {notesResult.success && notesResult.data.length === 0 && (
-                  <div className="rounded-xl border border-dashed border-slate-300/70 bg-white/60 px-4 py-3 text-sm text-slate-500 backdrop-blur-sm">
+                  <div className="rounded-3xl border border-white/40 bg-white/10 px-4 py-3 text-sm text-slate-700/80 shadow-[0_18px_45px_rgba(15,23,42,0.14)] backdrop-blur-md">
                     Du har inga anteckningar ännu. Skapa en ny för att komma
                     igång.
                   </div>

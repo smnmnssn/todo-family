@@ -1,4 +1,4 @@
-// app/todos/TodoList.tsx
+// components/todos/TodoList.tsx
 "use client";
 
 import * as React from "react";
@@ -73,20 +73,20 @@ export default function TodoList({ list }: TodoListProps) {
   }
 
   return (
-    <Card className="flex h-full flex-col">
-      <CardHeader className="flex flex-row items-start justify-between gap-3 border-b">
+    <Card className="glass-surface flex h-full flex-col overflow-hidden">
+      <CardHeader className="flex flex-row items-start justify-between gap-3 border-b border-white/25 bg-white/5">
         <div className="space-y-1">
-          <CardTitle className="text-base font-semibold">
+          <CardTitle className="text-base font-semibold text-slate-900">
             {list.title}
           </CardTitle>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-xs text-slate-700/80">
             {list.todos.length}{" "}
             {list.todos.length === 1 ? "uppgift" : "uppgifter"}
           </p>
         </div>
 
         <div className="flex items-center gap-1">
-          <CreateTodoDialog listId={list.id} />
+            <CreateTodoDialog listId={list.id} />
 
           <Dialog open={editOpen} onOpenChange={setEditOpen}>
             <DropdownMenu>
@@ -94,19 +94,24 @@ export default function TodoList({ list }: TodoListProps) {
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8"
+                  className="h-9 w-9 rounded-full border border-white/30 bg-white/10 text-slate-800 shadow-sm backdrop-blur-md hover:bg-white/25"
                   aria-label="Alternativ för lista"
                 >
                   <MoreVertical className="size-4" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+
+              <DropdownMenuContent
+                align="end"
+                className="rounded-2xl border border-white/40 bg-white/80 shadow-[0_18px_45px_rgba(15,23,42,0.18)] backdrop-blur-md"
+              >
                 <DialogTrigger asChild>
                   <DropdownMenuItem className="flex items-center gap-2">
                     <Edit3 className="size-3.5" />
                     Byt namn
                   </DropdownMenuItem>
                 </DialogTrigger>
+
                 <DropdownMenuItem
                   className="flex items-center gap-2 text-destructive focus:text-destructive"
                   onClick={handleDeleteList}
@@ -118,25 +123,31 @@ export default function TodoList({ list }: TodoListProps) {
               </DropdownMenuContent>
             </DropdownMenu>
 
-            <DialogContent>
+            <DialogContent className="sm:max-w-md rounded-3xl border border-white/60 bg-white/80 shadow-[0_18px_45px_rgba(15,23,42,0.18)] backdrop-blur-md">
               <DialogHeader>
-                <DialogTitle>Byt namn på lista</DialogTitle>
-                <DialogDescription>
+                <DialogTitle className="text-slate-900">
+                  Byt namn på lista
+                </DialogTitle>
+                <DialogDescription className="text-slate-700/80">
                   Uppdatera titeln för listan. Detta påverkar inte dina
                   befintliga todos.
                 </DialogDescription>
               </DialogHeader>
+
               <form onSubmit={handleUpdateTitle} className="space-y-4">
                 <Input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
                   placeholder="Lista..."
                   autoFocus
+                  className="bg-white/70"
                 />
+
                 <DialogFooter className="flex gap-2">
                   <Button
                     type="button"
-                    variant="ghost"
+                    variant="outline"
+                    className="border-white/50 bg-white/40 hover:bg-white/55"
                     onClick={() => {
                       setTitle(list.title);
                       setEditOpen(false);
@@ -155,9 +166,9 @@ export default function TodoList({ list }: TodoListProps) {
       <CardContent className="flex-1 pt-4">
         {list.todos.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-6 text-center">
-            <div className="rounded-full bg-muted p-2">
+            <div className="rounded-full border border-white/40 bg-white/20 p-2 shadow-sm backdrop-blur-md">
               <svg
-                className="size-5 text-muted-foreground"
+                className="size-5 text-slate-700/80"
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
                 viewBox="0 0 24 24"
@@ -169,18 +180,18 @@ export default function TodoList({ list }: TodoListProps) {
               </svg>
             </div>
 
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-slate-700/80">
               Inga uppgifter här ännu.
             </p>
 
-            <CreateTodoDialog listId={list.id} />
+              <CreateTodoDialog listId={list.id} />
           </div>
         ) : (
           <ul className="space-y-2 text-sm">
             {list.todos.map((todo) => (
               <li
                 key={todo.id}
-                className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 hover:bg-muted/60"
+                className="flex items-center justify-between gap-2 rounded-2xl border border-white/40 bg-white/15 px-2.5 py-2 shadow-[0_10px_24px_rgba(15,23,42,0.10)] backdrop-blur-md transition hover:bg-white/25"
               >
                 <label className="flex flex-1 items-center gap-3">
                   <Checkbox
@@ -193,8 +204,8 @@ export default function TodoList({ list }: TodoListProps) {
                   <span
                     className={
                       todo.done
-                        ? "text-muted-foreground line-through"
-                        : "text-foreground"
+                        ? "text-slate-600/80 line-through"
+                        : "text-slate-900"
                     }
                   >
                     {todo.title}
@@ -205,7 +216,7 @@ export default function TodoList({ list }: TodoListProps) {
                   variant="ghost"
                   size="icon"
                   aria-label="Ta bort uppgift"
-                  className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                  className="h-9 w-9 rounded-full border border-white/30 bg-white/10 text-slate-700/80 shadow-sm backdrop-blur-md hover:bg-white/25 hover:text-destructive"
                   disabled={deletingTodoId === todo.id}
                   onClick={async () => {
                     setDeletingTodoId(todo.id);

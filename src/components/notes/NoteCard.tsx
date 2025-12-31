@@ -96,61 +96,63 @@ export function NoteCard({ note }: NoteCardProps) {
   }
 
   return (
-    <article className="rounded-2xl border border-white/70 bg-white/80 px-4 py-3 text-sm shadow-[0_12px_30px_rgba(15,23,42,0.16)] backdrop-blur-md">
-      <div className="mb-2 flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-[#3b4a5c]">{note.title}</h3>
+    <article className="rounded-3xl border border-white/40 bg-white/10 px-4 py-3 text-sm shadow-[0_18px_45px_rgba(15,23,42,0.14)] backdrop-blur-md">
+      <div className="mb-2 flex items-start justify-between gap-3">
+        <h3 className="min-w-0 truncate text-sm font-semibold text-slate-900">
+          {note.title}
+        </h3>
 
-        <div className="flex gap-2">
+        <div className="flex shrink-0 items-center gap-2">
           <Button
             type="button"
             variant="outline"
             size="sm"
             onClick={handleDelete}
             disabled={isDeleting}
-            className="h-7 px-2 text-[11px]"
+            className="h-8 rounded-full border-white/40 bg-white/20 text-xs hover:bg-white/30"
           >
             {isDeleting ? "Tar bort..." : "Ta bort"}
           </Button>
 
           <Dialog open={open} onOpenChange={handleOpenChange}>
             <DialogTrigger asChild>
-              <Button type="button" size="sm" className="h-7 px-3 text-[11px]">
+              <Button type="button" size="sm" className="h-8 rounded-full text-xs">
                 Redigera
               </Button>
             </DialogTrigger>
 
-            <DialogContent className="sm:max-w-md rounded-3xl border border-white/70 bg-white/80 px-6 py-6 shadow-[0_18px_45px_rgba(15,23,42,0.18)] backdrop-blur-md">
+            <DialogContent className="sm:max-w-md rounded-3xl border border-white/60 bg-white/80 px-6 py-6 shadow-[0_18px_45px_rgba(15,23,42,0.18)] backdrop-blur-md">
               <DialogHeader>
-                <DialogTitle className="text-lg font-semibold text-[#3b4a5c]">
+                <DialogTitle className="text-lg font-semibold text-slate-900">
                   Redigera anteckning
                 </DialogTitle>
-                <DialogDescription className="text-xs text-slate-600">
+                <DialogDescription className="text-xs text-slate-700/80">
                   Uppdatera titel eller innehåll för anteckningen.
                 </DialogDescription>
               </DialogHeader>
 
               <form onSubmit={handleSubmit} className="mt-4 space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-[#3b4a5c]">
+                  <label className="text-sm font-medium text-slate-900">
                     Titel
                   </label>
                   <Input
                     value={title}
                     onChange={(event) => setTitle(event.target.value)}
                     autoFocus
-                    className="bg-white/80"
+                    className="bg-white/70"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-[#3b4a5c]">
+                  <label className="text-sm font-medium text-slate-900">
                     Innehåll
                   </label>
                   <Textarea
                     value={content}
                     onChange={(event) => setContent(event.target.value)}
                     rows={5}
-                    className="bg-white/80"
+                    className="bg-white/70"
                   />
                 </div>
 
@@ -160,6 +162,7 @@ export function NoteCard({ note }: NoteCardProps) {
                   <Button
                     type="button"
                     variant="outline"
+                    className="border-white/50 bg-white/40 hover:bg-white/55"
                     onClick={() => handleOpenChange(false)}
                     disabled={isSaving}
                   >
@@ -175,7 +178,7 @@ export function NoteCard({ note }: NoteCardProps) {
         </div>
       </div>
 
-      <p className="mt-1 max-h-24 overflow-hidden whitespace-pre-wrap text-xs text-slate-600">
+      <p className="mt-1 max-h-24 overflow-hidden whitespace-pre-wrap text-xs text-slate-700/80">
         {note.content}
       </p>
     </article>
