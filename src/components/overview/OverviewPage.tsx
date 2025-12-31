@@ -149,7 +149,7 @@ async function OverviewContent() {
             variant="outline"
             className="rounded-full border-white/40 bg-white/20 text-slate-900 shadow-sm backdrop-blur-md hover:bg-white/30"
           >
-            <Link href="/notes">Anteckningar</Link>
+            <Link href="/notes">Listor & anteckningar</Link>
           </Button>
         </div>
       </CardHeader>
@@ -157,24 +157,20 @@ async function OverviewContent() {
       <CardContent className="space-y-4">
         {/* “Next up” */}
         <div className="rounded-2xl border border-white/40 bg-white/15 p-4 shadow-[0_12px_30px_rgba(15,23,42,0.12)] backdrop-blur-md">
-          {data.activities.length > 0 ? (
-            <div className="flex flex-col gap-1">
-              <p className="text-sm font-medium text-slate-900">
-                Kommande denna vecka
-              </p>
-              <p className="text-sm text-slate-700/80">
-                Nästa: {data.activities[0].title} •{" "}
-                {data.activities[0].allDay
-                  ? "Heldag"
-                  : formatTime(data.activities[0].startsAt)}
-              </p>
-            </div>
-          ) : (
-            <p className="text-sm text-slate-700/80">
-              Inga aktiviteter denna vecka ännu.
-            </p>
-          )}
-        </div>
+  <p className="text-sm font-medium text-slate-900">
+    Kommande aktiviteter denna vecka
+  </p>
+
+  {data.activities.length === 0 ? (
+    <p className="mt-1 text-sm text-slate-700/80">
+      Inga aktiviteter denna vecka ännu.
+    </p>
+  ) : (
+    <p className="mt-1 text-sm text-slate-700/80">
+      {data.activities.length} st
+    </p>
+  )}
+</div>
 
         {/* Activity chips */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
