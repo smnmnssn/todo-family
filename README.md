@@ -10,7 +10,13 @@ The project is developed as a minimum viable product (MVP) with a strong focus o
 https://organizer-examensarbete.vercel.app/
 
 Authentication is required to use the application.  
-You can register a new account directly in the application.
+When seeding the database two test accounts will be created which you can use:
+
+User A: test@example.com
+User B: test2@example.com
+Password (both): test123
+
+You can also register a new account directly in the application.
 
 
 ## ▶️ Running the project locally
