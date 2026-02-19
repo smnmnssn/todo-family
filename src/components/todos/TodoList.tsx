@@ -325,7 +325,7 @@ export default function TodoList({ list }: TodoListProps) {
             value={newTodoTitle}
             aria-label="Skapa ny uppgift"
             onChange={(e) => setNewTodoTitle(e.target.value)}
-            placeholder="Lägg till punkt..."
+            placeholder="Lägg till todo..."
             className="h-9 rounded-2xl bg-white/70 text-xs"
           />
           <Button type="submit" size="sm" className="h-9 rounded-2xl px-3 text-xs">

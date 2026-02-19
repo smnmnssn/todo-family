@@ -18,12 +18,13 @@ interface ChecklistCardProps {
   checklist: ChecklistDTO;
 }
 
+type ChecklistItem = ChecklistDTO["items"][number];
+
 export function ChecklistCard({ checklist }: ChecklistCardProps) {
   const router = useRouter();
 
   const [newItemText, setNewItemText] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
-  const [loadingItem, setLoadingItem] = React.useState(false);
   const [loadingDelete, setLoadingDelete] = React.useState(false);
 
   const [items, setItems] = React.useState(checklist.items);
@@ -38,34 +39,49 @@ export function ChecklistCard({ checklist }: ChecklistCardProps) {
     event.preventDefault();
     setError(null);
 
-    if (!newItemText.trim()) {
+    const trimmed = newItemText.trim();
+    if (!trimmed) {
       setError("Punkten måste ha en text.");
       return;
     }
 
-    setLoadingItem(true);
+    // ✅ Optimistic insert immediately
+    const tempId = `temp-${crypto.randomUUID()}`;
+    const optimisticItem: ChecklistItem = {
+      id: tempId,
+      text: trimmed,
+      done: false,
+    } as ChecklistItem;
+
+    setItems((current) => [optimisticItem, ...current]);
+    setNewItemText("");
 
     const result = await addChecklistItem({
       checklistId: checklist.id,
-      text: newItemText.trim(),
+      text: trimmed,
     });
 
-    setLoadingItem(false);
-
     if (!result.success) {
+      // Revert optimistic insert
+      setItems((current) => current.filter((it) => it.id !== tempId));
       setError(result.error);
       return;
     }
 
-    setNewItemText("");
-    router.refresh();
+    // ✅ Optional:
+    // If your server returns the created item, replace temp with real.
+    // If it doesn't, just keep optimistic item (and optionally refresh in the background).
+    //
+    // Recommended: keep it snappy and skip refresh.
+    // If you need server-truth IDs, you can refresh AFTER a short delay.
+    //
+    // router.refresh();
   }
 
   async function handleToggleItemOptimistic(id: string): Promise<void> {
     setError(null);
     const prev = items;
 
-    // Optimistic toggle
     setItems((current) =>
       current.map((it) => (it.id === id ? { ...it, done: !it.done } : it)),
     );
@@ -78,7 +94,8 @@ export function ChecklistCard({ checklist }: ChecklistCardProps) {
       return;
     }
 
-    router.refresh();
+    // Often not needed if optimistic state is correct
+    // router.refresh();
   }
 
   async function handleDeleteChecklist(): Promise<void> {
@@ -106,7 +123,6 @@ export function ChecklistCard({ checklist }: ChecklistCardProps) {
     setError(null);
     const prev = items;
 
-    // Optimistic remove
     setItems((current) => current.filter((it) => it.id !== id));
 
     const result = await deleteChecklistItem({ id });
@@ -117,7 +133,7 @@ export function ChecklistCard({ checklist }: ChecklistCardProps) {
       return;
     }
 
-    router.refresh();
+    // router.refresh();
   }
 
   return (
@@ -145,10 +161,7 @@ export function ChecklistCard({ checklist }: ChecklistCardProps) {
       ) : (
         <ul className="mb-3 space-y-1 text-xs">
           {items.map((item) => (
-            <li
-              key={item.id}
-              className="flex items-center justify-between gap-2"
-            >
+            <li key={item.id} className="flex items-center justify-between gap-2">
               <div className="flex flex-1 items-center gap-2">
                 <Checkbox
                   checked={item.done}
@@ -196,12 +209,8 @@ export function ChecklistCard({ checklist }: ChecklistCardProps) {
           placeholder="Lägg till punkt..."
           className="h-9 rounded-2xl bg-white/70 text-xs"
         />
-        <Button
-          type="submit"
-          size="sm"
-          className="h-9 rounded-2xl px-3 text-xs"
-        >
-          {loadingItem ? "Lägger till..." : "Lägg till"}
+        <Button type="submit" size="sm" className="h-9 rounded-2xl px-3 text-xs">
+          Lägg till
         </Button>
       </form>
 
