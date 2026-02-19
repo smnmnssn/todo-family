@@ -51,12 +51,35 @@ interface TodoListProps {
 }
 
 export default function TodoList({ list }: TodoListProps) {
+  const [todos, setTodos] = React.useState<Todo[]>(list.todos);
   const [editOpen, setEditOpen] = React.useState(false);
   const [title, setTitle] = React.useState(list.title);
   const [isPending, startTransition] = React.useTransition();
   const [deletingTodoId, setDeletingTodoId] = React.useState<string | null>(
     null
   );
+
+  React.useEffect(() => {
+    setTodos(list.todos);
+  }, [list.todos]);
+
+  function handleToggleTodo(id: string, nextDone: boolean) {
+    const prevTodos = todos;
+
+    // Optimistic UI update
+    setTodos((current) =>
+      current.map((t) => (t.id === id ? { ...t, done: nextDone } : t))
+    );
+
+    startTransition(async () => {
+      const res = await toggleTodoDone({ id, done: nextDone });
+
+      if (!res.success) {
+        // Revert om servern misslyckas
+        setTodos(prevTodos);
+      }
+    });
+  }
 
   async function handleUpdateTitle(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -80,13 +103,12 @@ export default function TodoList({ list }: TodoListProps) {
             {list.title}
           </CardTitle>
           <p className="text-xs text-slate-700/80">
-            {list.todos.length}{" "}
-            {list.todos.length === 1 ? "uppgift" : "uppgifter"}
+            {todos.length} {todos.length === 1 ? "uppgift" : "uppgifter"}
           </p>
         </div>
 
         <div className="flex items-center gap-1">
-            <CreateTodoDialog listId={list.id} />
+          <CreateTodoDialog listId={list.id} />
 
           <Dialog open={editOpen} onOpenChange={setEditOpen}>
             <DropdownMenu>
@@ -164,7 +186,7 @@ export default function TodoList({ list }: TodoListProps) {
       </CardHeader>
 
       <CardContent className="flex-1 pt-4">
-        {list.todos.length === 0 ? (
+        {todos.length === 0 ? (
           <div className="flex flex-col items-center justify-center gap-3 py-6 text-center">
             <div className="rounded-full border border-white/40 bg-white/20 p-2 shadow-sm backdrop-blur-md">
               <svg
@@ -180,15 +202,13 @@ export default function TodoList({ list }: TodoListProps) {
               </svg>
             </div>
 
-            <p className="text-xs text-slate-700/80">
-              Inga uppgifter här ännu.
-            </p>
+            <p className="text-xs text-slate-700/80">Inga uppgifter här ännu.</p>
 
-              <CreateTodoDialog listId={list.id} />
+            <CreateTodoDialog listId={list.id} />
           </div>
         ) : (
           <ul className="space-y-2 text-sm">
-            {list.todos.map((todo) => (
+            {todos.map((todo) => (
               <li
                 key={todo.id}
                 className="flex items-center justify-between gap-2 rounded-2xl border border-white/40 bg-white/15 px-2.5 py-2 shadow-[0_10px_24px_rgba(15,23,42,0.10)] backdrop-blur-md transition hover:bg-white/25"
@@ -197,9 +217,10 @@ export default function TodoList({ list }: TodoListProps) {
                   <Checkbox
                     aria-label="Markera uppgift som klar"
                     checked={todo.done}
-                    onCheckedChange={async (checked) =>
-                      await toggleTodoDone({ id: todo.id, done: !!checked })
-                    }
+                    onCheckedChange={(checked) => {
+                      handleToggleTodo(todo.id, !!checked);
+                    }}
+                    disabled={isPending}
                   />
                   <span
                     className={

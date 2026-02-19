@@ -49,7 +49,6 @@ export function LoginForm() {
       });
 
       if (result?.error) {
-        setPasswordError("Fel email eller lösenord");
         setFormError("Fel email eller lösenord");
         return;
       }
