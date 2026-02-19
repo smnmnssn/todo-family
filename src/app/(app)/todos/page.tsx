@@ -31,9 +31,7 @@ export default async function TodosPage() {
               <h1 className="text-2xl font-semibold tracking-tight text-slate-900">
                 Todos
               </h1>
-              <p className="text-sm text-slate-700/80">
-                Organisera familjens att-göra-listor på ett ställe.
-              </p>
+            
             </div>
 
             <div className="w-full md:w-auto">

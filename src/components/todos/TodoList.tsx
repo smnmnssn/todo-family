@@ -21,14 +21,14 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { MoreVertical, Edit3, Trash2 } from "lucide-react";
+import { MoreVertical, Edit3, Trash2, Plus } from "lucide-react";
 import {
   toggleTodoDone,
   deleteTodo,
   deleteTodoList,
   updateTodoList,
+  createTodo,
 } from "../../app/(app)/todos/actions";
-import CreateTodoDialog from "./CreateTodoDialog";
 
 type Todo = {
   id: string;
@@ -52,8 +52,15 @@ interface TodoListProps {
 
 export default function TodoList({ list }: TodoListProps) {
   const [todos, setTodos] = React.useState<Todo[]>(list.todos);
+
   const [editOpen, setEditOpen] = React.useState(false);
   const [title, setTitle] = React.useState(list.title);
+
+  // ✅ inline add
+  const [newTodoTitle, setNewTodoTitle] = React.useState("");
+  const [error, setError] = React.useState<string | null>(null);
+
+  const inputRef = React.useRef<HTMLInputElement | null>(null);
   const [, startTransition] = React.useTransition();
 
   React.useEffect(() => {
@@ -61,50 +68,96 @@ export default function TodoList({ list }: TodoListProps) {
   }, [list.todos]);
 
   function handleToggleTodo(id: string, nextDone: boolean) {
+    setError(null);
     const prevTodos = todos;
 
-    // Optimistic UI update
     setTodos((current) =>
-      current.map((t) => (t.id === id ? { ...t, done: nextDone } : t))
+      current.map((t) => (t.id === id ? { ...t, done: nextDone } : t)),
     );
 
     startTransition(async () => {
       const res = await toggleTodoDone({ id, done: nextDone });
-
       if (!res.success) {
-        // Revert om servern misslyckas
         setTodos(prevTodos);
+        setError(res.error ?? "Kunde inte uppdatera uppgift.");
       }
     });
   }
 
   function handleDeleteTodoOptimistic(id: string) {
+    setError(null);
     const prevTodos = todos;
 
-    // Optimistic remove
     setTodos((current) => current.filter((t) => t.id !== id));
 
     startTransition(async () => {
       const res = await deleteTodo({ id });
-
       if (!res.success) {
-        // Revert om servern misslyckas
         setTodos(prevTodos);
+        setError(res.error ?? "Kunde inte ta bort uppgift.");
       }
     });
   }
 
   async function handleUpdateTitle(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    setError(null);
+
     const res = await updateTodoList({ id: list.id, title });
     if (res.success) {
       setEditOpen(false);
+      return;
     }
+
+    setError(res.error ?? "Kunde inte uppdatera listans namn.");
   }
 
   async function handleDeleteList() {
+    setError(null);
+
     startTransition(async () => {
-      await deleteTodoList({ id: list.id });
+      const res = await deleteTodoList({ id: list.id });
+      if (!res?.success) {
+        setError(res?.error ?? "Kunde inte ta bort lista.");
+      }
+    });
+  }
+
+  async function handleAddTodoInline(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setError(null);
+
+    const trimmed = newTodoTitle.trim();
+    if (!trimmed) {
+      setError("Uppgiften måste ha en titel.");
+      return;
+    }
+
+    // ✅ optimistic add
+    const tempId = `temp-${crypto.randomUUID()}`;
+    const optimisticTodo: Todo = {
+      id: tempId,
+      title: trimmed,
+      done: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    setTodos((current) => [optimisticTodo, ...current]);
+    setNewTodoTitle("");
+
+    startTransition(async () => {
+      const res = await createTodo({ listId: list.id, title: trimmed });
+
+      if (!res.success) {
+        setTodos((current) => current.filter((t) => t.id !== tempId));
+        setError(res.error ?? "Kunde inte skapa uppgift.");
+        return;
+      }
+
+        // Success: keep optimistic item.
+
+
     });
   }
 
@@ -121,7 +174,16 @@ export default function TodoList({ list }: TodoListProps) {
         </div>
 
         <div className="flex items-center gap-1">
-          <CreateTodoDialog listId={list.id} />
+          {/* ✅ keep button, but it just focuses the inline input now */}
+          <Button
+            type="button"
+            variant="outline"
+            className="h-9 rounded-full border-white/40 bg-white/20 px-3 text-xs hover:bg-white/30"
+            onClick={() => inputRef.current?.focus()}
+          >
+            <Plus className="size-4" />
+            Ny uppgift
+          </Button>
 
           <Dialog open={editOpen} onOpenChange={setEditOpen}>
             <DropdownMenu>
@@ -197,9 +259,9 @@ export default function TodoList({ list }: TodoListProps) {
         </div>
       </CardHeader>
 
-      <CardContent className="flex-1 pt-4">
+      <CardContent className="flex flex-1 flex-col pt-4">
         {todos.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 py-6 text-center">
+          <div className="flex flex-1 flex-col items-center justify-center gap-3 py-6 text-center">
             <div className="rounded-full border border-white/40 bg-white/20 p-2 shadow-sm backdrop-blur-md">
               <svg
                 className="size-5 text-slate-700/80"
@@ -215,8 +277,6 @@ export default function TodoList({ list }: TodoListProps) {
             </div>
 
             <p className="text-xs text-slate-700/80">Inga uppgifter här ännu.</p>
-
-            <CreateTodoDialog listId={list.id} />
           </div>
         ) : (
           <ul className="space-y-2 text-sm">
@@ -257,6 +317,23 @@ export default function TodoList({ list }: TodoListProps) {
             ))}
           </ul>
         )}
+
+        {/* ✅ Inline add form (the only way to add now) */}
+        <form onSubmit={handleAddTodoInline} className="mt-4 flex gap-2">
+          <Input
+            ref={inputRef}
+            value={newTodoTitle}
+            aria-label="Skapa ny uppgift"
+            onChange={(e) => setNewTodoTitle(e.target.value)}
+            placeholder="Lägg till punkt..."
+            className="h-9 rounded-2xl bg-white/70 text-xs"
+          />
+          <Button type="submit" size="sm" className="h-9 rounded-2xl px-3 text-xs">
+            Lägg till
+          </Button>
+        </form>
+
+        {error && <p className="mt-2 text-xs text-destructive">{error}</p>}
       </CardContent>
     </Card>
   );
