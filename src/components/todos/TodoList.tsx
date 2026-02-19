@@ -174,16 +174,7 @@ export default function TodoList({ list }: TodoListProps) {
         </div>
 
         <div className="flex items-center gap-1">
-          {/* ✅ keep button, but it just focuses the inline input now */}
-          <Button
-            type="button"
-            variant="outline"
-            className="h-9 rounded-full border-white/40 bg-white/20 px-3 text-xs hover:bg-white/30"
-            onClick={() => inputRef.current?.focus()}
-          >
-            <Plus className="size-4" />
-            Ny uppgift
-          </Button>
+         
 
           <Dialog open={editOpen} onOpenChange={setEditOpen}>
             <DropdownMenu>
