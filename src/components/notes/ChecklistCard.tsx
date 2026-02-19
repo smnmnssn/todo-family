@@ -1,3 +1,4 @@
+// components/checklists/ChecklistCard.tsx
 "use client";
 
 import * as React from "react";
@@ -19,14 +20,17 @@ interface ChecklistCardProps {
 
 export function ChecklistCard({ checklist }: ChecklistCardProps) {
   const router = useRouter();
+
   const [newItemText, setNewItemText] = React.useState("");
   const [error, setError] = React.useState<string | null>(null);
   const [loadingItem, setLoadingItem] = React.useState(false);
   const [loadingDelete, setLoadingDelete] = React.useState(false);
-  const [loadingToggleId, setLoadingToggleId] =
-    React.useState<string | null>(null);
-  const [loadingDeleteItemId, setLoadingDeleteItemId] =
-    React.useState<string | null>(null);
+
+  const [items, setItems] = React.useState(checklist.items);
+
+  React.useEffect(() => {
+    setItems(checklist.items);
+  }, [checklist.items]);
 
   async function handleAddItem(
     event: React.FormEvent<HTMLFormElement>,
@@ -57,15 +61,19 @@ export function ChecklistCard({ checklist }: ChecklistCardProps) {
     router.refresh();
   }
 
-  async function handleToggleItem(id: string): Promise<void> {
+  async function handleToggleItemOptimistic(id: string): Promise<void> {
     setError(null);
-    setLoadingToggleId(id);
+    const prev = items;
+
+    // Optimistic toggle
+    setItems((current) =>
+      current.map((it) => (it.id === id ? { ...it, done: !it.done } : it)),
+    );
 
     const result = await toggleChecklistItem({ id });
 
-    setLoadingToggleId(null);
-
     if (!result.success) {
+      setItems(prev);
       setError(result.error);
       return;
     }
@@ -94,15 +102,17 @@ export function ChecklistCard({ checklist }: ChecklistCardProps) {
     router.refresh();
   }
 
-  async function handleDeleteItem(id: string): Promise<void> {
+  async function handleDeleteItemOptimistic(id: string): Promise<void> {
     setError(null);
-    setLoadingDeleteItemId(id);
+    const prev = items;
+
+    // Optimistic remove
+    setItems((current) => current.filter((it) => it.id !== id));
 
     const result = await deleteChecklistItem({ id });
 
-    setLoadingDeleteItemId(null);
-
     if (!result.success) {
+      setItems(prev);
       setError(result.error);
       return;
     }
@@ -122,33 +132,33 @@ export function ChecklistCard({ checklist }: ChecklistCardProps) {
           variant="outline"
           size="sm"
           onClick={handleDeleteChecklist}
-          disabled={loadingDelete}
           className="h-8 rounded-full border-white/40 bg-white/20 text-xs hover:bg-white/30"
         >
           {loadingDelete ? "Tar bort..." : "Ta bort lista"}
         </Button>
       </div>
 
-      {checklist.items.length === 0 ? (
+      {items.length === 0 ? (
         <p className="mb-3 text-xs text-slate-700/80">
           Inga punkter ännu. Lägg till din första punkt nedan.
         </p>
       ) : (
         <ul className="mb-3 space-y-1 text-xs">
-          {checklist.items.map((item) => (
-            <li key={item.id} className="flex items-center justify-between gap-2">
+          {items.map((item) => (
+            <li
+              key={item.id}
+              className="flex items-center justify-between gap-2"
+            >
               <div className="flex flex-1 items-center gap-2">
                 <Checkbox
                   checked={item.done}
                   aria-label="Markera som klar"
-                  onCheckedChange={() => handleToggleItem(item.id)}
-                  disabled={loadingToggleId === item.id}
+                  onCheckedChange={() => handleToggleItemOptimistic(item.id)}
                   className="h-3.5 w-3.5"
                 />
                 <button
                   type="button"
-                  onClick={() => handleToggleItem(item.id)}
-                  disabled={loadingToggleId === item.id}
+                  onClick={() => handleToggleItemOptimistic(item.id)}
                   className="flex-1 text-left"
                 >
                   <span
@@ -167,8 +177,7 @@ export function ChecklistCard({ checklist }: ChecklistCardProps) {
                 type="button"
                 variant="ghost"
                 size="sm"
-                onClick={() => handleDeleteItem(item.id)}
-                disabled={loadingDeleteItemId === item.id}
+                onClick={() => handleDeleteItemOptimistic(item.id)}
                 className="h-8 w-8 rounded-full border border-transparent bg-transparent p-0 text-slate-700/70 hover:border-white/30 hover:bg-white/15 hover:text-slate-900"
                 aria-label="Ta bort punkt"
               >
@@ -187,7 +196,11 @@ export function ChecklistCard({ checklist }: ChecklistCardProps) {
           placeholder="Lägg till punkt..."
           className="h-9 rounded-2xl bg-white/70 text-xs"
         />
-        <Button type="submit" size="sm" disabled={loadingItem} className="h-9 rounded-2xl px-3 text-xs">
+        <Button
+          type="submit"
+          size="sm"
+          className="h-9 rounded-2xl px-3 text-xs"
+        >
           {loadingItem ? "Lägger till..." : "Lägg till"}
         </Button>
       </form>

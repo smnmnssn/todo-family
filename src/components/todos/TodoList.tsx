@@ -54,10 +54,7 @@ export default function TodoList({ list }: TodoListProps) {
   const [todos, setTodos] = React.useState<Todo[]>(list.todos);
   const [editOpen, setEditOpen] = React.useState(false);
   const [title, setTitle] = React.useState(list.title);
-  const [isPending, startTransition] = React.useTransition();
-  const [deletingTodoId, setDeletingTodoId] = React.useState<string | null>(
-    null
-  );
+  const [, startTransition] = React.useTransition();
 
   React.useEffect(() => {
     setTodos(list.todos);
@@ -73,6 +70,22 @@ export default function TodoList({ list }: TodoListProps) {
 
     startTransition(async () => {
       const res = await toggleTodoDone({ id, done: nextDone });
+
+      if (!res.success) {
+        // Revert om servern misslyckas
+        setTodos(prevTodos);
+      }
+    });
+  }
+
+  function handleDeleteTodoOptimistic(id: string) {
+    const prevTodos = todos;
+
+    // Optimistic remove
+    setTodos((current) => current.filter((t) => t.id !== id));
+
+    startTransition(async () => {
+      const res = await deleteTodo({ id });
 
       if (!res.success) {
         // Revert om servern misslyckas
@@ -137,7 +150,6 @@ export default function TodoList({ list }: TodoListProps) {
                 <DropdownMenuItem
                   className="flex items-center gap-2 text-destructive focus:text-destructive"
                   onClick={handleDeleteList}
-                  disabled={isPending}
                 >
                   <Trash2 className="size-3.5" aria-label="Ta bort lista" />
                   Ta bort lista
@@ -220,7 +232,6 @@ export default function TodoList({ list }: TodoListProps) {
                     onCheckedChange={(checked) => {
                       handleToggleTodo(todo.id, !!checked);
                     }}
-                    disabled={isPending}
                   />
                   <span
                     className={
@@ -238,12 +249,7 @@ export default function TodoList({ list }: TodoListProps) {
                   size="icon"
                   aria-label="Ta bort uppgift"
                   className="h-9 w-9 rounded-full border border-white/30 bg-white/10 text-slate-700/80 shadow-sm backdrop-blur-md hover:bg-white/25 hover:text-destructive"
-                  disabled={deletingTodoId === todo.id}
-                  onClick={async () => {
-                    setDeletingTodoId(todo.id);
-                    await deleteTodo({ id: todo.id });
-                    setDeletingTodoId(null);
-                  }}
+                  onClick={() => handleDeleteTodoOptimistic(todo.id)}
                 >
                   <Trash2 className="size-4" />
                 </Button>
